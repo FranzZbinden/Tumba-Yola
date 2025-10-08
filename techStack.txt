@@ -1,0 +1,9 @@
+
+To install all dependencies write on terminal:
+    --> (pip install -r requirements.txt)
+        --> This will install all dependencies included in "requirements.txt"
+        
+-------------------------------------------------------------------------
+
+List of Tech Stack:
+frontend: pygame
