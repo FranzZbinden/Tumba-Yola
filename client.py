@@ -1,8 +1,8 @@
 import pygame
 
 # Screen Size
-width = 500
-height = 500
+width = 750
+height = 750
 
 clientNumber = 0 # How many clients are active (unsure)
 
