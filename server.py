@@ -9,6 +9,8 @@ load_dotenv()
 ipAddress = os.getenv("IP")
 
 server = ipAddress
+# A better way to get ip address (not hardcoded)
+# server = socket.gethostbyname(socket.gethostname())
 port = 5555     # Port to send packets 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress
@@ -25,7 +27,7 @@ s.listen(2) # For opening the port, the number inside the parameter is the limit
 print("Waiting for connection, server started...")
 
 def threaded_client(conn):
-
+    conn.send(str.encode("Connected"))
     reply = ""
     while True:
         try:
@@ -43,7 +45,8 @@ def threaded_client(conn):
         except:
             break
 
-    pass
+    print("Lost connection")
+    conn.close()
 
 while True: # Looking for conections
     conn, addr = s.accept() # conn object represents who is connected, addr stores the IP adress 
