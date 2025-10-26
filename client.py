@@ -1,4 +1,5 @@
 import pygame
+from network import Network
 
 # Screen Size
 width = 750
@@ -41,29 +42,52 @@ class Player ():
         if keys[pygame.K_DOWN]:
             self.y += self.vel
 
+        self.update()
+
+    def update(self):
         self.rectangle = (self.x,self.y,self.width,self.height)
 
 
-def redrawWindow(window, player):
+# from string to tuple
+def read_pos(str):
+    str = str.split(",")
+    return int(str[0]), int(str[1])
+
+
+def make_pos(tup):
+    return str(tup[0]) + "," + str(tup[1])
+
+def redrawWindow(window, player, player2):
     window.fill((255,255,255))
     player.draw(window)
+    player2.draw(window)
     pygame.display.update()
 
 
 def main():
     run = True
-    p = Player(50, 50, 100, 100, (0, 255, 0))   # Test player
+    n = Network()
+    startPos = read_pos(n.getPos()) # recives string, convert to tuple and sets the value to startPos
+    p = Player(startPos[0], startPos[1], 100, 100, (0, 255, 0))   # Test player
+    p2 = Player(0, 0, 100, 100, (0, 255, 0))   # Test player2
     clock = pygame.time.Clock()
 
 
-    while run:
+    while run: 
         clock.tick(60)  # Limits fps 
+
+        p2Pos = read_pos(n.send(make_pos((p.x,p.y))))
+        p2.x = p2Pos[0]
+        p2.y = p2Pos[1]
+        p2.update()
+
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
                 pygame.quit()
 
         p.move()
-        redrawWindow(window, p)
+        redrawWindow(window, p, p2)
 
 main()

@@ -1,2 +1,2 @@
 # Tumba-Yola
-Repository for Data Comunication game project using sockets 
+Repository for Data Comunication game using sockets 
