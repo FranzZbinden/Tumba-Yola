@@ -13,7 +13,7 @@ server = ipAddress
 # server = socket.gethostbyname(socket.gethostname())
 port = 5555     # Port to send packets 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 address
 
 
 # Try if port is available to use
