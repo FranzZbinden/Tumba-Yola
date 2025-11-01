@@ -1,5 +1,4 @@
 import pygame
-import button
 
 # Initialize Pygame
 pygame.init()
@@ -37,8 +36,8 @@ while running:
         for col in range(cols):
             color = BLUE if matrix[row][col] == 1 else BLACK
             pygame.draw.rect(screen, color, (col * cell_size, row * cell_size, cell_size, cell_size))
-            pygame.draw.rect(screen, WHITE, (col * cell_size, row * cell_size, cell_size, cell_size), 5)  # Grid lines
-            
+            pygame.draw.rect(screen, WHITE, (col * cell_size, row * cell_size, cell_size, cell_size), 1)  # Grid lines
+
     pygame.display.flip()
 
 pygame.quit()
