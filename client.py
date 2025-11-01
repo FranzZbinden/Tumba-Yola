@@ -24,6 +24,7 @@ class Player ():
 
     def atack(self):
         pass
+        
 
     # draw player?
     def draw(self, window):
