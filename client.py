@@ -5,13 +5,13 @@ from network import Network
 width = 750
 height = 750
 
-clientNumber = 0 # How many clients are active (unsure)
+clientNumber = 0 
 
 window = pygame.display.set_mode((width, height))     
 pygame.display.set_caption("Client")
 
 
-
+# constructor player
 class Player ():
     def __init__(self, x, y, width, height, color): 
         self.x = x 
@@ -20,9 +20,9 @@ class Player ():
         self.height = height
         self.color = color
         self.rectangle = (x,y,width,height)  #tuple for knowing the location of the player, and size (width,height) of the player
-        self.vel = 3
+        self.vel = 3 # velocity
 
-
+    # draw player?
     def draw(self, window):
         pygame.draw.rect(window, self.color, self.rectangle)
 
@@ -48,15 +48,16 @@ class Player ():
         self.rectangle = (self.x,self.y,self.width,self.height)
 
 
-# from string to tuple
+# from string to tuple position
 def read_pos(str):
     str = str.split(",")
     return int(str[0]), int(str[1])
 
-
+# from tuple position to str position
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
 
+# draw players in window 
 def redrawWindow(window, player, player2):
     window.fill((255,255,255))
     player.draw(window)

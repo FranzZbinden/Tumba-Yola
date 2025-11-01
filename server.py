@@ -13,8 +13,7 @@ server = ipAddress
 # server = socket.gethostbyname(socket.gethostname())
 port = 5555     # Port to send packets 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress
-
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
 
 # Try if port is available to use
 try:
@@ -26,12 +25,12 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-# from string to tuple
+# from string to tuple position
 def read_pos(str):
     str = str.split(",")
     return int(str[0]), int(str[1])
 
-
+# from tuple position to str position for socket
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
 
