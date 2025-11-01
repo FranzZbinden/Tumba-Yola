@@ -29,6 +29,7 @@
 # version 3 (the better one (to use))
 matrix = [[0]*10 for _ in range(10)]
 
+#test function to print the matrix nicely
 def print_matrix(matrix):
     for row in matrix:
         print(' '.join(str(x) for x in row))
