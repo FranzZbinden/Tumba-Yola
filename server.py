@@ -37,6 +37,8 @@ def make_pos(tup):
 
 pos = [(0,0), (100,100)]
 
+matrix = [[0]*10 for _ in range(10)]    # creates the 10 * 10 matrix
+
 def threaded_client(conn, player):
     conn.send(str.encode(make_pos(pos[player])))
     reply = ""
