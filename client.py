@@ -23,7 +23,7 @@ class Player ():
         self.vel = 3 # velocity
 
     def atack(self):
-        
+        pass
 
     # draw player?
     def draw(self, window):
