@@ -22,6 +22,9 @@ class Player ():
         self.rectangle = (x,y,width,height)  #tuple for knowing the location of the player, and size (width,height) of the player
         self.vel = 3 # velocity
 
+    def atack(self):
+        
+
     # draw player?
     def draw(self, window):
         pygame.draw.rect(window, self.color, self.rectangle)
