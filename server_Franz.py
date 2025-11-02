@@ -25,7 +25,7 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-# from string to tuple position
+# From string to tuple position
 def read_pos(str):
     str = str.split(",")
     return int(str[0]), int(str[1])
@@ -43,11 +43,20 @@ matrix = [[0]*3 for _ in range(3)]    # creates the 10 * 10 matrix
 #   O(1)
 #   (4,4)
 #   list = [4,4]
-#   value = list_name[list[0]],list[1]]
+#   value = list_name[list[0]]list[1]]
 
+# (helper) Returns true if the position is already ocupied by 1
+def check_cell_val(matrix: list, position: tuple) -> bool:
+    return matrix[position[0]][position[1]] == 1
 
+def assign_activation_to_cell(matrix: list, position: tuple):
+    if check_cell_val(matrix, position):
+        raise ValueError(f"Cell at {position} is already occupied.")
+        # TO-DO (handle error correctly)
+    else:
+        matrix[position[0]][position[1]] = 1
+    
 
-value = list_name[4][4]
 
 def threaded_client(conn, player):
     conn.send(str.encode(make_pos(pos[player])))
