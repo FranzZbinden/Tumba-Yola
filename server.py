@@ -37,7 +37,17 @@ def make_pos(tup):
 
 pos = [(0,0), (100,100)]
 
-matrix = [[0]*10 for _ in range(10)]    # creates the 10 * 10 matrix
+matrix = [[0]*3 for _ in range(3)]    # creates the 10 * 10 matrix
+
+# TO-DO acces matrix Method
+#   O(1)
+#   (4,4)
+#   list = [4,4]
+#   value = list_name[list[0]],list[1]]
+
+
+
+value = list_name[4][4]
 
 def threaded_client(conn, player):
     conn.send(str.encode(make_pos(pos[player])))

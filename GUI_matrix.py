@@ -27,7 +27,7 @@ for vertical_index in range(ROWS):
         row.append(btn.Button(vertical_index, horizontal_index, x, y, BUTTON_WIDTH, BUTTON_HEIGHT)) 
     buttons.append(row)
 
-
+# (T0-DO) def running():
 running = True
 while running:
     screen.fill(WHITE)
