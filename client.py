@@ -51,6 +51,13 @@ class Player ():
     def update(self):
         self.rectangle = (self.x,self.y,self.width,self.height)
 
+# handle matrices
+def matrix_to_string(matrix: list) -> str:
+    return ';'.join(','.join(map(str, row)) for row in matrix)
+
+# handle matrices
+def string_to_matrix(s: str) -> list:
+    return [list(map(int, row.split(','))) for row in s.split(';')]
 
 # from string to tuple position
 def read_pos(str):

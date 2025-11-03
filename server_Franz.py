@@ -34,9 +34,7 @@ def read_pos(str):
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
 
-
-
-# TO-DO acces matrix Method
+# acces matrix Method
 #   O(1)
 #   (4,4)
 #   list = [4,4]
@@ -58,12 +56,32 @@ def assign_activation_to_cell(matrix: list, position: tuple):
 matrix = [[0]*3 for _ in range(3)]    # creates the 10 * 10 matrix
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()               # To protect turn and matrtrix?
+clients = []                          # Store all connected clients for broadcasting matrices
 
+def matrix_to_string(matrix: list) -> str:
+    return ';'.join(','.join(map(str, row)) for row in matrix)
+
+def string_to_matrix(s: str) -> list:
+    return [list(map(int, row.split(','))) for row in s.split(';')]
+
+# Send the current matrix state to all connected clients
+def broadcast_matrix():
     
+    matrix_str = matrix_to_string(matrix) 
+    
+    for client_connected in clients[:]:  # sends the matrix to all connected clients on the list clients
+        try:
+            client_connected.sendall(str.encode(matrix_str))  # Send the matrix string with scandall (ensures all is sent)
+        except: # handles connection failure or client disconnected
+            if client_connected in clients:
+                clients.remove(client_connected)    
 
-# New threadded_client
+# new threadded_client
 def threaded_client(conn, player):
     global current_turn     # Modify var in global scope
+    
+    # Add this client to the clients list
+    clients.append(conn)
 
     conn.send(str.encode(f"You are player: {player}"))
     print(f"Player {player} connected.")
@@ -92,8 +110,11 @@ def threaded_client(conn, player):
                     try:
                         assign_activation_to_cell(matrix, pos)
                         print(f"Player {player} pressed {pos}")
-                        reply = f"Movement accepted. Matrix: {matrix}"
+                        reply = f"Movement accepted."
                         current_turn = 1 - current_turn  # Change turn
+                        
+                        # Broadcast updated matrix to all connected clients
+                        broadcast_matrix()
                     except ValueError as e:
                         reply = str(e)
                 else:
@@ -103,15 +124,19 @@ def threaded_client(conn, player):
 
         except:
             break
-
+    
+    # remove client from the list when they disconnect ?
+    if conn in clients:
+        clients.remove(conn)
+    
     print(f"Connection lost with {player}")
     conn.close()
 
 
-# main loop
+# main loop for finding clients
 currentPlayer = 0
 while True:
-    conn, addr = s.accept()
+    conn, addr = s.accept() # blocks until recives client connection
     print("Connected to:", addr)
 
     start_new_thread(threaded_client, (conn, currentPlayer))
