@@ -1,6 +1,6 @@
 import pygame
 from network import Network
-
+# IDK why but without this line the code doesn't work
 # Screen Size
 width = 750
 height = 750
