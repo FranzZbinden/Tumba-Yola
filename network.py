@@ -15,7 +15,7 @@ class Network:
         self.pos = self.connect()
         #self.matrix = self.connect()
 
-
+# TO-DO: get matrix -> string
     def getPos(self):
         return self.pos
     
@@ -27,7 +27,7 @@ class Network:
         except: 
             pass
 
-
+# TO-DO: send data -> get matrix
     def send(self, data):
         try:
             self.client.send(str.encode(data))
