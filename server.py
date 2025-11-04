@@ -26,8 +26,8 @@ s.listen(2) # For opening the port, the number inside the parameter is the limit
 print("Waiting for connection, server started...")
 
 # From string to tuple position
-def read_pos(str):
-    str = str.split(",")
+def read_pos(stri: str):
+    stri = stri.split(",")
     return int(str[0]), int(str[1])
 
 # from tuple position to str position for socket
@@ -131,6 +131,7 @@ def threaded_client(conn, player):
     
     print(f"Connection lost with {player}")
     conn.close()
+    currentPlayer -= 1
 
 
 # main loop for finding clients

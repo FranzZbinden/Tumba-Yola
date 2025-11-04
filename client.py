@@ -60,9 +60,14 @@ def string_to_matrix(s: str) -> list:
     return [list(map(int, row.split(','))) for row in s.split(';')]
 
 # from string to tuple position
-def read_pos(str):
-    str = str.split(",")
-    return int(str[0]), int(str[1])
+def read_pos(stri: str):
+    stri = stri.split(",")
+    return int(stri[0]), int(stri[1])
+
+# # From string to tuple position
+# def read_pos(stri: str):
+#     stri = stri.split(",")
+#     return int(str[0]), int(str[1])
 
 # from tuple position to str position
 def make_pos(tup):
