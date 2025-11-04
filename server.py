@@ -25,14 +25,14 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-# From string to tuple position
-def read_pos(stri: str):
-    stri = stri.split(",")
-    return int(str[0]), int(str[1])
+# # From string to tuple position
+# def read_pos(stri: str):
+#     stri = stri.split(",")
+#     return int(str[0]), int(str[1])
 
-# from tuple position to str position for socket
-def make_pos(tup):
-    return str(tup[0]) + "," + str(tup[1])
+# # from tuple position to str position for socket
+# def make_pos(tup):
+#     return str(tup[0]) + "," + str(tup[1])
 
 # acces matrix Method
 #   O(1)
@@ -71,7 +71,7 @@ def broadcast_matrix():
     
     for client_connected in clients[:]:  # sends the matrix to all connected clients on the list clients
         try:
-            client_connected.sendall(str.encode(matrix_str))  # Send the matrix string with scandall (ensures all is sent)
+            client_connected.sendall(str.encode(matrix_str))  # Send the matrix string with sendall (sends to all clients)
         except: # handles connection failure or client disconnected
             if client_connected in clients:
                 clients.remove(client_connected)    
@@ -89,11 +89,11 @@ def threaded_client(conn, player):
     while True:
         try:
             data = conn.recv(2048).decode() # receives up to 2048 bytes, decodes to string (tuple), 
-            if not data:    # if connection closed
+            if not data:    
                 print(f"Player {player} desconnected.")
                 break
 
-            #waits for connection in (rows,column)
+            # waits for connection in (rows,column)
             parts = data.split(",")
             if len(parts) != 2:
                 conn.send(str.encode("Invalid Format"))

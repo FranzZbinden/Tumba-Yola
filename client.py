@@ -10,7 +10,6 @@ clientNumber = 0
 window = pygame.display.set_mode((width, height))     
 pygame.display.set_caption("Client")
 
-
 # constructor player
 class Player ():
     def __init__(self, x, y, width, height, color): 
@@ -64,14 +63,14 @@ def read_pos(stri: str):
     stri = stri.split(",")
     return int(stri[0]), int(stri[1])
 
-# # From string to tuple position
-# def read_pos(stri: str):
-#     stri = stri.split(",")
-#     return int(str[0]), int(str[1])
-
 # from tuple position to str position
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
+
+# Waits for matrix sent from the server
+matrix_str = n.receive_matrix()
+print("Matrix received:", matrix_str)
+# ======================================
 
 # draw players in window 
 def redrawWindow(window, player, player2):
@@ -84,6 +83,7 @@ def redrawWindow(window, player, player2):
 def main():
     run = True
     n = Network()
+
     startPos = read_pos(n.getPos()) # recives string, convert to tuple and sets the value to startPos
     p = Player(startPos[0], startPos[1], 100, 100, (0, 255, 0))   # Test player
     p2 = Player(0, 0, 100, 100, (0, 255, 0))   # Test player2
@@ -92,6 +92,9 @@ def main():
 
     while run: 
         clock.tick(60)  # Limits fps 
+
+        updated_str_matrix = n.get_matrix()
+        updated_matrix = string_to_matrix(updated_str_matrix)
 
         p2Pos = read_pos(n.send(make_pos((p.x,p.y))))
         p2.x = p2Pos[0]

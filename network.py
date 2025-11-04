@@ -12,13 +12,8 @@ class Network:
         self.server = ip
         self.port = 5555
         self.addr = (self.server, self.port)
-        self.pos = self.connect()
-        #self.matrix = self.connect()
+        self.connect()
 
-# TO-DO: get matrix -> string
-    def getPos(self):
-        return self.pos
-    
 
     def connect(self):
         try:
@@ -27,8 +22,20 @@ class Network:
         except: 
             pass
 
-# TO-DO: send data -> get matrix
-    def send(self, data):
+    # helper for reciving data: str
+    def recive_matrix(self) -> str: 
+        try:                                        # waits until recived data from server 
+            data = self.client.recv(4096).decode()  # <-- from sendall(), it is recived here 
+            return data
+        except Exception as e:
+            print("Receive failed:", e)
+
+    # recive matrix from server to client
+    def get_matrix(self) -> str:
+        return self.recive_matrix()
+    
+    # Sends strings (in this case matrices)
+    def send(self, data) -> str:
         try:
             self.client.send(str.encode(data))
             return self.client.recv(2048).decode() 
