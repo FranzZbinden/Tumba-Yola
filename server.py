@@ -107,7 +107,8 @@ def threaded_client(conn, player):
                 else:
                     reply = "It's not your turn"
 
-            conn.sendall(str.encode(reply))
+            #conn.sendall(str.encode(reply))
+            print("Is not the turn of client X")
 
         except:
             break
