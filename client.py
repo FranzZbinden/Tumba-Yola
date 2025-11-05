@@ -16,14 +16,6 @@ WHITE = (255, 255, 255)
 window = pygame.display.set_mode((WIDTH, HEIGHT))    
 pygame.display.set_caption("Client")
 
-# constructor player
-class Player ():
-    def __init__(self, x, y): 
-        self.x = x 
-
-    def update(self):
-        self.rectangle = (self.x,self.y,self.width,self.height)
-
 # handle matrices
 def string_to_matrix(s: str) -> list:
     return [list(map(int, row.split(','))) for row in s.split(';')]
