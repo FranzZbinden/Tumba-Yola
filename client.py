@@ -1,5 +1,6 @@
 import pygame
 from network import Network
+import GUI_matrix as gui
 # IDK why but without this line the code doesn't work
 # Screen Size
 width = 750
@@ -84,9 +85,9 @@ def main():
     run = True
     n = Network()
 
-    startPos = read_pos(n.getPos()) # recives string, convert to tuple and sets the value to startPos
-    p = Player(startPos[0], startPos[1], 100, 100, (0, 255, 0))   # Test player
-    p2 = Player(0, 0, 100, 100, (0, 255, 0))   # Test player2
+    # startPos = read_pos(n.getPos()) # recives string, convert to tuple and sets the value to startPos
+    # p = Player(startPos[0], startPos[1], 100, 100, (0, 255, 0))   # Test player
+    # p2 = Player(0, 0, 100, 100, (0, 255, 0))   # Test player2
     clock = pygame.time.Clock()
 
 
