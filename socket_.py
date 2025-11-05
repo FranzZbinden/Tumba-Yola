@@ -5,7 +5,7 @@ import os
 load_dotenv()
 ip = os.getenv("IP") or "127.0.0.1" #ip for testing
 
-class Network:
+class Socket_:
     def __init__(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server = ip
@@ -45,10 +45,3 @@ class Network:
             return self.client.recv(2048).decode() 
         except socket.error as e: 
             print(e)
-
-
-
-# for testing =======
-# n = Network()
-# print(n.send("hello"))
-# print(n.send("working"))

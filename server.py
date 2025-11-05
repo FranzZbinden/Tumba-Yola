@@ -4,52 +4,32 @@ import threading
 import sys
 from dotenv import load_dotenv, dotenv_values
 import os
+import utilities as uc
 
 load_dotenv()
 server = os.getenv("IP") or "127.0.0.1" # ip for testing
-port = 5555     # Port to send packets 
+port = 5555     
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
 
 # Try if port is available to use
 try:
     s.bind((server,port))
-
 except socket.error as e: 
     str(e)
 
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-# (helper) Returns true if the position is already ocupied by 1
-def check_cell_val(matrix: list, position: tuple) -> bool:
-    return matrix[position[0]][position[1]] == 1
-
-
-def assign_activation_to_cell(matrix: list, position: tuple):
-    if check_cell_val(matrix, position):
-        raise ValueError(f"Cell at {position} is already occupied.")
-        # TO-DO (handle error correctly)
-    else:
-        matrix[position[0]][position[1]] = 1
-
-
-# HARDCODED, fix later
-matrix = [[0]*5 for _ in range(5)]
+matrix = uc.create_matrix()
 current_turn = 0                      # 0 = player 1, 1 = player 2
-lock = threading.Lock()               # To protect turn and matrtrix?
+lock = threading.Lock()
 clients = []                          # Store all connected clients for broadcasting matrices
-
-def matrix_to_string(matrix: list) -> str:
-    return ';'.join(','.join(map(str, row)) for row in matrix)
-
-def string_to_matrix(s: str) -> list:
-    return [list(map(int, row.split(','))) for row in s.split(';')]
 
 # Send the current matrix state to all connected clients
 def broadcast_matrix():
     
-    matrix_str = matrix_to_string(matrix) 
+    matrix_str = uc.matrix_to_string(matrix) 
     
     for client_connected in clients[:]:  # sends the matrix to all connected clients on the list clients
         try:
@@ -70,7 +50,7 @@ def threaded_client(conn, player):
 
         # Send initial matrix to this client
     with lock:
-        initial_matrix = matrix_to_string(matrix)
+        initial_matrix = uc.matrix_to_string(matrix)
         conn.sendall(str.encode(initial_matrix))
 
     while True:
@@ -95,7 +75,7 @@ def threaded_client(conn, player):
             with lock:
                 if player == current_turn:
                     try:
-                        assign_activation_to_cell(matrix, pos)
+                        uc.assign_activation_to_cell(matrix, pos)
                         print(f"Player {player} pressed {pos}")
                         reply = f"Movement accepted."
                         current_turn = 1 - current_turn  # Change turn
@@ -112,14 +92,12 @@ def threaded_client(conn, player):
 
         except:
             break
-    
-    # remove client from the list when they disconnect ?
+
     if conn in clients:
         clients.remove(conn)
     
     print(f"Connection lost with {player}")
     conn.close()
-
 
 # main loop for finding clients
 currentPlayer = 0
@@ -130,49 +108,3 @@ while True:
 
     start_new_thread(threaded_client, (conn, currentPlayer))
     currentPlayer += 1
-
-
-
-
-
-
-# pos = [(0,0), (100,100)]
-
-# def threaded_client(conn, player):
-#     conn.send(str.encode(make_pos(pos[player])))
-#     reply = ""
-#     while True:
-#         try:
-#             data = conn.recv(2048).decode() # 2048 Bits are sent for each package, the less the faster
-#             pos[player] = read_pos(data)
-
-#             reply = ""
-
-#             if not data:
-#                 print("Disconnected")
-#                 break
-#             else:
-#                 if player == 1:
-#                     reply = pos[0]
-#                 else:
-#                     reply = pos[1]
-
-#                 print("Received: ", data)
-#                 print("Sending: ", reply)
-
-#             conn.sendall(str.encode(make_pos(reply)))
-#         except:
-#             break
-
-#     print("Lost connection")
-#     conn.close()
-
-# currentPlayer = 0
-# while True: # Looking for conections
-#     conn, addr = s.accept() # conn object represents who is connected, addr stores the IP adress 
-#     print("Connected to:", addr)
-
-#     start_new_thread(threaded_client, (conn, currentPlayer))
-#     currentPlayer +=1
-
-    
