@@ -6,10 +6,7 @@ from dotenv import load_dotenv, dotenv_values
 import os
 
 load_dotenv()
-server = os.getenv("IP")
-
-# A better way to get ip address (not hardcoded)
-# server = socket.gethostbyname(socket.gethostname())
+server = os.getenv("IP") or "127.0.0.1" # ip for testing
 port = 5555     # Port to send packets 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
@@ -24,21 +21,6 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-# # From string to tuple position
-# def read_pos(stri: str):
-#     stri = stri.split(",")
-#     return int(str[0]), int(str[1])
-
-# # from tuple position to str position for socket
-# def make_pos(tup):
-#     return str(tup[0]) + "," + str(tup[1])
-
-# acces matrix Method
-#   O(1)
-#   (4,4)
-#   list = [4,4]
-#   value = list_name[list[0]]list[1]]
-
 # (helper) Returns true if the position is already ocupied by 1
 def check_cell_val(matrix: list, position: tuple) -> bool:
     return matrix[position[0]][position[1]] == 1
@@ -52,7 +34,8 @@ def assign_activation_to_cell(matrix: list, position: tuple):
         matrix[position[0]][position[1]] = 1
 
 
-matrix = [[0]*3 for _ in range(3)]    # creates the 10 * 10 matrix
+# HARDCODED, fix later
+matrix = [[0]*5 for _ in range(5)]
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()               # To protect turn and matrtrix?
 clients = []                          # Store all connected clients for broadcasting matrices
@@ -135,12 +118,12 @@ def threaded_client(conn, player):
     
     print(f"Connection lost with {player}")
     conn.close()
-    currentPlayer -= 1
 
 
 # main loop for finding clients
 currentPlayer = 0
 while True:
+    print("waiting for players")
     conn, addr = s.accept() # blocks until recives client connection
     print("Connected to:", addr)
 

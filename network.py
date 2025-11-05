@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-ip = os.getenv("IP")
+ip = os.getenv("IP") or "127.0.0.1" #ip for testing
 
 class Network:
     def __init__(self):
@@ -15,11 +15,16 @@ class Network:
 
 
     def connect(self):
-        try:
+        try:        # TO VERIFY LATER, temporary
+            print(f"Attempting to connect to {self.addr} ...")
+            self.client.settimeout(5)
             self.client.connect(self.addr)
-            return self.client.recv(2048).decode() 
-        except: 
-            pass
+            self.client.settimeout(None)
+            print("Connected! Waiting for welcome message ...")
+            return self.client.recv(2048).decode()
+        except Exception as e:
+            print(f"Connection failed: {e}")
+            return None
 
     def get_matrix(self) -> str:
         try:

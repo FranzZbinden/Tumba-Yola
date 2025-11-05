@@ -1,6 +1,5 @@
 import pygame
 from network import Network
-import GUI_matrix as gui
 import button as btn
 
 # Screen Size
@@ -82,7 +81,7 @@ def main():
         clock.tick(60)  # Limits fps 
 
         updated_str_matrix = n.get_matrix()
-        if updated_str_matrix:  # Only update if data received
+        if updated_str_matrix:  # Only update if data received bug HERE <--------
             updated_matrix = string_to_matrix(updated_str_matrix)
             matrix = updated_matrix
 
@@ -98,9 +97,8 @@ def main():
                     for button in row:
                         if button.is_clicked(event.pos):
                             print(f"Button {button.index} clicked") # return the 2d index
-                            assign_activation_to_cell(matrix, button.index) # recives tupl(row,column) modifies matrix
-                            n.send(matrix_to_string(matrix))
-                            reply = n.send(matrix)  # Send to server the response (temporary) FIX LATER
+                            pos_str = make_pos(button.index)  # "row,col"
+                            reply = n.send(pos_str)
                             print(f"Server response: {reply}")
 
         
