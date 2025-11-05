@@ -2,121 +2,119 @@ import pygame
 from network import Network
 import GUI_matrix as gui
 import button as btn
-# IDK why but without this line the code doesn't work
-# Screen Size
-width = 750
-height = 750
 
+# Screen Size
+WIDTH, HEIGHT = 700, 700
 clientNumber = 0 
 
-window = pygame.display.set_mode((width, height))     
+BUTTON_WIDTH, BUTTON_HEIGHT = 100, 100
+MAGNITUDE = 5
+ROWS, COLS = MAGNITUDE, MAGNITUDE
+DIVIDER = 10
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+
+window = pygame.display.set_mode((WIDTH, HEIGHT))    
 pygame.display.set_caption("Client")
 
 # constructor player
 class Player ():
-    def __init__(self, x, y, width, height, color): 
+    def __init__(self, x, y): 
         self.x = x 
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color
-        self.rectangle = (x,y,width,height)  #tuple for knowing the location of the player, and size (width,height) of the player
-        self.vel = 3 # velocity
 
-    def atack(self):
-        pass
-# cambio test
-
-    # # draw player?
-    # def draw(self, window):
-    #     pygame.draw.rect(window, self.color, self.rectangle)
-
-    # Updates the atribution rectangle of the object initialized with left, right, up, down
-    # def move(self):
-    #     keys = pygame.key.get_pressed()
-
-    #     if keys[pygame.K_LEFT]:
-    #         self.x -= self.vel
-
-    #     if keys[pygame.K_RIGHT]:
-    #         self.x += self.vel
-
-    #     if keys[pygame.K_UP]:
-    #         self.y -= self.vel
-
-    #     if keys[pygame.K_DOWN]:
-    #         self.y += self.vel
-
-    #     self.update()
-
-    # def update(self):
-    #     self.rectangle = (self.x,self.y,self.width,self.height)
-
-# handle matrices
-def matrix_to_string(matrix: list) -> str:
-    return ';'.join(','.join(map(str, row)) for row in matrix)
+    def update(self):
+        self.rectangle = (self.x,self.y,self.width,self.height)
 
 # handle matrices
 def string_to_matrix(s: str) -> list:
     return [list(map(int, row.split(','))) for row in s.split(';')]
 
-# from string to tuple position
-# def read_pos(stri: str):
-#     stri = stri.split(",")
-#     return int(stri[0]), int(stri[1])
 
-# # from tuple position to str position
-# def make_pos(tup):
-#     return str(tup[0]) + "," + str(tup[1])
+def matrix_to_string(matrix: list) -> str:
+    return ';'.join(','.join(map(str, row)) for row in matrix)
+
+# from tuple position to str position
+def make_pos(tup):
+    return str(tup[0]) + "," + str(tup[1])
+
+
+def check_cell_val(matrix: list, position: tuple) -> bool:
+    return matrix[position[0]][position[1]] == 1
+
+
+def assign_activation_to_cell(matrix: list, position: tuple):
+    if check_cell_val(matrix, position):
+        raise ValueError(f"Cell at {position} is already occupied.")
+        # TO-DO (handle error correctly)
+    else:
+        matrix[position[0]][position[1]] = 1
 
 # Waits for matrix sent from the server
-matrix_str = n.receive_matrix()
-print("Matrix received:", matrix_str)
-# ======================================
+# matrix_str = n.receive_matrix()
+# print("Matrix received:", matrix_str)
 
-# draw players in window 
-# def redrawWindow(window, player, player2):
-#     window.fill((255,255,255))
-#     player.draw(window)
-#     player2.draw(window)
-#     pygame.display.update()
 
+#=========================================================================
+# Create grid of buttons
+def create_buttons(rows: int, cols: int) -> list:
+    buttons = []
+    for vertical_index in range(rows):
+        row = []
+        for horizontal_index in range(cols):
+            x = horizontal_index * (BUTTON_WIDTH + DIVIDER) # x, y = cordinates in pixels
+            y = vertical_index * (BUTTON_HEIGHT + DIVIDER) 
+            row.append(btn.Button(vertical_index, horizontal_index, x, y, BUTTON_WIDTH, BUTTON_HEIGHT)) 
+        buttons.append(row)
+    return buttons
+# =========================================================================
+
+buttons = create_buttons(ROWS, COLS)
 
 def main():
     run = True
     n = Network()
 
-# New code for matrix of buttons - Carlos
-    magnitude = 3
-    buttons = []
-    for v in range(magnitude):
-        row = []
-        for h in range(magnitude):
-            x = h * (gui.BUTTON_WIDTH + gui.DIVIDER)
-            y = v * (gui.BUTTON_HEIGHT + gui.DIVIDER)
-            row.append(gui.btn.Button(v, h, x, y, gui.BUTTON_WIDTH, gui.BUTTON_HEIGHT))
-        buttons.append(row)
     clock = pygame.time.Clock()
 
+    matrix = [[0]*COLS for _ in range(ROWS)]    # creates the 10 * 10 matrix
 
     while run: 
         clock.tick(60)  # Limits fps 
 
         updated_str_matrix = n.get_matrix()
-        updated_matrix = string_to_matrix(updated_str_matrix)
+        if updated_str_matrix:  # Only update if data received
+            updated_matrix = string_to_matrix(updated_str_matrix)
+            matrix = updated_matrix
 
-        # p2Pos = read_pos(n.send(make_pos((p.x,p.y))))
-        # p2.x = p2Pos[0]
-        # p2.y = p2Pos[1]
-        # p2.update()
-
+        window.fill(WHITE)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                pygame.quit()
+                
 
-        # p.move()
-        # redrawWindow(window, p, p2)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                for row in buttons:
+                    for button in row:
+                        if button.is_clicked(event.pos):
+                            print(f"Button {button.index} clicked") # return the 2d index
+                            assign_activation_to_cell(matrix, button.index) # recives tupl(row,column) modifies matrix
+                            n.send(matrix_to_string(matrix))
+                            reply = n.send(matrix)  # Send to server the response (temporary) FIX LATER
+                            print(f"Server response: {reply}")
+
+        
+        # Update button colors and draw
+        for row in buttons:
+            for button in row:
+                row_idx, col_idx = button.index
+                button.color = WHITE if matrix[row_idx][col_idx] == 0 else BLACK
+                button.draw(window)
+
+        pygame.display.flip()
+    
+    pygame.quit()
+
+
 
 main()
