@@ -6,7 +6,6 @@ from dotenv import load_dotenv, dotenv_values
 import os
 
 load_dotenv()
-
 server = os.getenv("IP")
 
 # A better way to get ip address (not hardcoded)
@@ -85,6 +84,11 @@ def threaded_client(conn, player):
 
     conn.send(str.encode(f"You are player: {player}"))
     print(f"Player {player} connected.")
+
+        # Send initial matrix to this client
+    with lock:
+        initial_matrix = matrix_to_string(matrix)
+        conn.sendall(str.encode(initial_matrix))
 
     while True:
         try:

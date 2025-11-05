@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
 ip = os.getenv("IP")
 
 class Network:
@@ -22,17 +21,17 @@ class Network:
         except: 
             pass
 
-    # helper for reciving data: str
-    def recive_matrix(self) -> str: 
-        try:                                        # waits until recived data from server 
-            data = self.client.recv(4096).decode()  # <-- from sendall(), it is recived here 
+    def get_matrix(self) -> str:
+        try:
+            self.client.setblocking(False)  # Dont wait for data
+            data = self.client.recv(4096).decode()
             return data
+        except BlockingIOError:
+            # No data available yet, return empty or last known state
+            return None
         except Exception as e:
             print("Receive failed:", e)
-
-    # recive matrix from server to client
-    def get_matrix(self) -> str:
-        return self.recive_matrix()
+            return None
     
     # Sends strings (in this case matrices)
     def send(self, data) -> str:
