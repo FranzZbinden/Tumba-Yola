@@ -1,4 +1,5 @@
 import button as btn
+import random as rdm
 
 BUTTON_WIDTH, BUTTON_HEIGHT = 100, 100
 DIVIDER = 10
@@ -21,7 +22,7 @@ def matrix_to_string(matrix: list) -> str:
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
 
-# Handle matrix
+# Handle matrix, Returns True if given cell == 1
 def check_cell_val(matrix: list, position: tuple) -> bool: # (helper)
     return matrix[position[0]][position[1]] == 1
 
@@ -44,3 +45,19 @@ def create_buttons(rows: int, cols: int) -> list:
             row.append(btn.Button(vertical_index, horizontal_index, x, y, BUTTON_WIDTH, BUTTON_HEIGHT)) 
         buttons.append(row)
     return buttons
+
+# Function to print the matrix nicely
+def print_matrix(matrix):
+    for row in matrix:
+        print(' '.join(str(x) for x in row))
+
+# Generates random activation points inside a matrix
+def random_activ_matrix(matrix: list, cell_ammount: int):
+    activated = 0
+    while activated < cell_ammount:
+        x_rand = rdm.randint(0,MAGNITUDE-1)
+        y_rand = rdm.randint(0,MAGNITUDE-1)
+        if not check_cell_val(matrix, (x_rand,y_rand)):
+            matrix[x_rand][y_rand] = 1
+            activated += 1
+            
