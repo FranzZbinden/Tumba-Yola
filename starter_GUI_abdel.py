@@ -50,7 +50,7 @@ while running:
             if start_button.collidepoint(event.pos):
                 # pygame.quit()
                 # (TO-DO) method start method call the method in client vvvvvvvv
-                subprocess.Popen(["python", "GUI_matrix.py"])
+                subprocess.Popen(["python", "loading_screen.py"])
                 sys.exit()
 
             if exit_button.collidepoint(event.pos):

@@ -60,4 +60,32 @@ def random_activ_matrix(matrix: list, cell_ammount: int):
         if not check_cell_val(matrix, (x_rand,y_rand)):
             matrix[x_rand][y_rand] = 1
             activated += 1
+
+
+
+def generate_randomships(size=10, ships=[5, 4, 3, 3, 2]):
+    # Initialize matrix
+    matrix = [[0 for _ in range(size)] for _ in range(size)]
+
+    for ship_len in ships:
+        placed = False
+        while not placed:
+            orientation = rdm.choice(['H', 'V'])
+            if orientation == 'H':
+                row = rdm.randint(0, size - 1)
+                col = rdm.randint(0, size - ship_len)
+                # Check if the cells are free
+                if all(matrix[row][col + i] == 0 for i in range(ship_len)):
+                    for i in range(ship_len):
+                        matrix[row][col + i] = 1
+                    placed = True
+            else:  # Vertical
+                row = rdm.randint(0, size - ship_len)
+                col = rdm.randint(0, size - 1)
+                if all(matrix[row + i][col] == 0 for i in range(ship_len)):
+                    for i in range(ship_len):
+                        matrix[row + i][col] = 1
+                    placed = True
+
+    return matrix
             
