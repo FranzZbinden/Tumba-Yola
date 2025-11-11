@@ -13,8 +13,10 @@ pygame.display.set_caption("Client")
 
 clientNumber = 0 
 buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
+updated_matrix = uc.create_matrix()
 
 def main():
+    global updated_matrix
     run = True
     n = Socket_()
     clock = pygame.time.Clock()
@@ -40,7 +42,7 @@ def main():
                         if button.is_clicked(event.pos):
                             print(f"Button {button.index} clicked") # return the 2d index
                             pos_str = uc.make_pos(button.index)  # "row, col"
-                            reply = n.send(pos_str)     # sends tuple to server
+                            reply = n.send(f"attack|{pos_str}")     # sends typed command to server
                             print(f"Server response: {reply}")
 
         # Update button colors and draw
