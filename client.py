@@ -5,8 +5,8 @@ import utilities as uc
 
 # Screen Size
 WIDTH, HEIGHT = 700, 700
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+# BLACK = (0, 0, 0)
+# WHITE = (255, 255, 255)
 
 window = pygame.display.set_mode((WIDTH, HEIGHT))    
 pygame.display.set_caption("Client")
@@ -23,7 +23,7 @@ def main():
 
     while run: 
         clock.tick(60) 
-        window.fill(WHITE)
+        window.fill(uc.WHITE)
 
         # TO-DO: define protocol for reciving data from socket for name, points, matrices...
         updated_str_matrix = n.get_matrix() # <- refactor get_matrix to get_data (and then redirect data)
@@ -49,7 +49,7 @@ def main():
         for row in buttons:
             for button in row:
                 row_idx, col_idx = button.index
-                button.color = WHITE if updated_matrix[row_idx][col_idx] == 0 else BLACK
+                button.color = uc.WHITE if updated_matrix[row_idx][col_idx] == 0 else uc.BLACK
                 button.draw(window)
 
         pygame.display.flip()
