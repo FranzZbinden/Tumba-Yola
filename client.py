@@ -14,7 +14,7 @@ pygame.display.set_caption("Client")
 clientNumber = 0 
 buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
 updated_matrix = uc.create_matrix()
-
+#@
 def main():
     global updated_matrix
     run = True

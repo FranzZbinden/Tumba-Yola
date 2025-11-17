@@ -63,7 +63,7 @@ def random_activ_matrix(matrix: list, cell_ammount: int):
 
 
 
-def generate_randomships(size=10, ships=[5, 4, 3, 3, 2]):
+def generate_random_ships(size=10, ships=[5, 4, 3, 3, 2]):
     # Initialize matrix
     matrix = [[0 for _ in range(size)] for _ in range(size)]
 
