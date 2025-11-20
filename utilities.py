@@ -1,11 +1,11 @@
 import button as btn
 import random as rdm
 
-BUTTON_WIDTH, BUTTON_HEIGHT = 100, 100
+BUTTON_WIDTH, BUTTON_HEIGHT = 45, 45
 DIVIDER = 10
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-MAGNITUDE = 5
+MAGNITUDE = 10
 
 def create_matrix() -> list: 
     return [[0]*MAGNITUDE for _ in range(MAGNITUDE)]
@@ -62,7 +62,6 @@ def random_activ_matrix(matrix: list, cell_ammount: int):
             activated += 1
 
 
-
 def generate_randomships(size=10, ships=[5, 4, 3, 3, 2]):
     # Initialize matrix
     matrix = [[0 for _ in range(size)] for _ in range(size)]
@@ -88,4 +87,14 @@ def generate_randomships(size=10, ships=[5, 4, 3, 3, 2]):
                     placed = True
 
     return matrix
-            
+
+#    Create a dictionary with keys: (row, col)
+#    Values of each keys are boolean
+def create_cell_state_map(size: int = MAGNITUDE) -> dict:
+    return {(row, col): False for row in range(size) for col in range(size)}
+
+#    Set the given (row, col) key in the hash -> True
+def set_cell_attacked(cell_state_map: dict, position: tuple) -> None:
+    if position not in cell_state_map:
+        raise KeyError(f"Invalid cell position: {position}")
+    cell_state_map[position] = True
