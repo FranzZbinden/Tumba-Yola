@@ -7,4 +7,4 @@ __pycache__/
 *.pyo
 *.pyd
 *.pdb
-*.sd.store
+*.ds.store
