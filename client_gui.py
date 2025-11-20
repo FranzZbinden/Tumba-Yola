@@ -1,0 +1,83 @@
+import pygame
+import utilities as uc
+
+class ClientGUI:
+    def __init__(self):
+        # vvvvvvvvvvvvvv  Compute grid dimensions from utilities vvvvvvvvv
+        self.GRID_WIDTH = uc.MAGNITUDE * uc.BUTTON_WIDTH + (uc.MAGNITUDE - 1) * uc.DIVIDER
+        self.GRID_HEIGHT = uc.MAGNITUDE * uc.BUTTON_HEIGHT + (uc.MAGNITUDE - 1) * uc.DIVIDER
+        # vvvvvvvvvvvvvv  Padding between the two boards (match client expectation: DIVIDER * 3) 
+        self.INTER_GRID_PADDING = uc.DIVIDER * 3
+
+        width = max(700, self.GRID_WIDTH)
+        height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
+
+        self.window = pygame.display.set_mode((width, height))
+        pygame.display.set_caption("Client")
+        self.clock = pygame.time.Clock()
+
+        # Create buttons for both grids vvvvvvvvvvvvvvvvv
+        self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
+        self.bottom_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
+
+        # Moves bottom board components 1 size down
+        offset_y = self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
+        for row in self.bottom_buttons:
+            for button in row:
+                button.rect.y += offset_y
+
+
+
+    # Process pygame events and return:
+    #   { 'quit': bool, 'bottom_click': (row, col) | None }
+    # Only the bottom grid is interactive.
+
+    # No relevant events in this frame:
+    #     {"quit": False, "bottom_click": None}
+    # Window close clicked:
+    #     {"quit": True, "bottom_click": None}
+    # Bottom grid cell clicked (example at row 3, col 5):
+    #     {"quit": False, "bottom_click": (3, 5)}
+   
+    # checks for events, button down or close-game.
+    def process_events(self) -> dict:
+        bottom_click = None
+        quit_flag = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit_flag = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # Check bottom grid clicks
+                for row in self.bottom_buttons:
+                    for button in row:
+                        if button.is_clicked(event.pos):
+                            bottom_click = button.index
+                            break
+                    if bottom_click is not None:
+                        break
+        return {"quit": quit_flag, "bottom_click": bottom_click}
+
+    # draw both boards according to their 2d lists and update the window.
+    def draw(self, top_matrix: list, bottom_matrix: list) -> None:
+        self.clock.tick(60)
+        self.window.fill(uc.WHITE)
+
+        # Draw top board
+        for row in self.top_buttons:
+            for button in row:
+                r, c = button.index # row, columns
+                button.color = uc.WHITE if top_matrix[r][c] == 0 else uc.BLACK
+                button.draw(self.window)
+
+        # Draw bottom board
+        for row in self.bottom_buttons:
+            for button in row:
+                r, c = button.index
+                button.color = uc.WHITE if bottom_matrix[r][c] == 0 else uc.BLACK
+                button.draw(self.window)
+
+        pygame.display.flip()
+
+    def shutdown(self) -> None:
+        pygame.quit()
+
