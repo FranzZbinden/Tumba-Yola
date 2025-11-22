@@ -21,23 +21,18 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-matrix = uc.create_matrix()
+matrices = {0: uc.create_matrix(), 1: uc.create_matrix()} # A dict: key = playerID, val = matrix
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()
-clients = []                          # Store all connected clients for broadcasting matrices
+clients = []                          # Store all connected clients
+conn_to_player = {}                   # Map each connection to its player id
 
-# Send the current matrix state to all connected clients
-def broadcast_matrix():
-    
-    matrix_str = uc.matrix_to_string(matrix) 
-    
-    for client_connected in clients[:]:  # sends the matrix to all connected clients on the list clients
-        try:
-            # Broadcast with type prefix and newline terminator
-            client_connected.sendall(f"matrix|{matrix_str}\n".encode("utf-8"))  # Send the matrix line to all clients
-        except: # handles connection failure or client disconnected
-            if client_connected in clients:
-                clients.remove(client_connected)    
+def send_matrix(conn, matrix):
+    try:
+        matrix_str = uc.matrix_to_string(matrix)
+        conn.sendall(f"matrix|{matrix_str}\n".encode("utf-8"))
+    except:
+        pass
 
 # new threadded_client
 def threaded_client(conn, player):
@@ -45,6 +40,7 @@ def threaded_client(conn, player):
     
     # Add this client to the clients list
     clients.append(conn)
+    conn_to_player[conn] = player
 
     # Send a welcome/ack line
     conn.sendall(f"ack|You are player: {player}\n".encode("utf-8"))
@@ -52,8 +48,7 @@ def threaded_client(conn, player):
 
         # Send initial matrix to this client
     with lock:
-        initial_matrix = uc.matrix_to_string(matrix)
-        conn.sendall(f"matrix|{initial_matrix}\n".encode("utf-8"))
+        send_matrix(conn, matrices[player])
 
     while True:
         try:
@@ -84,15 +79,16 @@ def threaded_client(conn, player):
                     with lock:
                         if player == current_turn:
                             try:
-                                uc.assign_activation_to_cell(matrix, pos)
+                                # Update ONLY this player's matrix
+                                uc.assign_activation_to_cell(matrices[player], pos)
                                 print(f"Player {player} pressed {pos}")
                                 current_turn = 1 - current_turn  # Change turn
 
                                 # Immediate ack to the requester
                                 conn.sendall(b"ack|ok\n")
 
-                                # Broadcast updated matrix to all connected clients
-                                broadcast_matrix()
+                                # Send updated matrix back to this player
+                                send_matrix(conn, matrices[player])
                             except ValueError as e:
                                 conn.sendall(f"error|{e}\n".encode("utf-8"))
                         else:
@@ -110,6 +106,8 @@ def threaded_client(conn, player):
 
     if conn in clients:
         clients.remove(conn)
+    if conn in conn_to_player:
+        del conn_to_player[conn]
     
     print(f"Connection lost with {player}")
     conn.close()

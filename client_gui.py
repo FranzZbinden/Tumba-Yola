@@ -29,8 +29,8 @@ class ClientGUI:
 
 
     # Process pygame events and return:
-    #   { 'quit': bool, 'bottom_click': (row, col) | None }
-    # Only the bottom grid is interactive.
+    #   { 'quit': bool, 'top_click': (row, col) | None }
+    # Only the TOP grid is interactive.
 
     # No relevant events in this frame:
     #     {"quit": False, "bottom_click": None}
@@ -41,21 +41,21 @@ class ClientGUI:
    
     # checks for events, button down or close-game.
     def process_events(self) -> dict:
-        bottom_click = None
+        top_click = None
         quit_flag = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit_flag = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                # Check bottom grid clicks
-                for row in self.bottom_buttons:
+                # Check TOP grid clicks
+                for row in self.top_buttons:
                     for button in row:
                         if button.is_clicked(event.pos):
-                            bottom_click = button.index
+                            top_click = button.index
                             break
-                    if bottom_click is not None:
+                    if top_click is not None:
                         break
-        return {"quit": quit_flag, "bottom_click": bottom_click}
+        return {"quit": quit_flag, "top_click": top_click}
 
     # draw both boards according to their 2d lists and update the window.
     def draw(self, top_matrix: list, bottom_matrix: list) -> None:
