@@ -1,14 +1,18 @@
 import button as btn
 import random as rdm
 
-BUTTON_WIDTH, BUTTON_HEIGHT = 45, 45
-DIVIDER = 10
+# Boards
+BUTTON_WIDTH, BUTTON_HEIGHT = 50, 50
+DIVIDER = 5
+MAGNITUDE = 10
+
+# Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREY = (200, 200, 200)
-MAGNITUDE = 10
+
 
 def create_matrix() -> list: 
     return [[0]*MAGNITUDE for _ in range(MAGNITUDE)]

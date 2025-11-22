@@ -9,7 +9,7 @@ class ClientGUI:
         # vvvvvvvvvvvvvv  Padding between the two boards (match client expectation: DIVIDER * 3) 
         self.INTER_GRID_PADDING = uc.DIVIDER * 3
 
-        width = max(700, self.GRID_WIDTH)
+        width = max(1000, self.GRID_WIDTH)
         height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
 
         self.window = pygame.display.set_mode((width, height))
@@ -20,11 +20,23 @@ class ClientGUI:
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
         self.bottom_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
 
-        # Moves bottom board components 1 size down
-        offset_y = self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
+        # Center both boards horizontally & vertically as a stacked group
+        center_x = (width - self.GRID_WIDTH) // 2
+        total_stack_h = 2 * self.GRID_HEIGHT + self.INTER_GRID_PADDING
+        top_offset_y = max(0, (height - total_stack_h) // 2)
+        bottom_offset_y = top_offset_y + self.GRID_HEIGHT + self.INTER_GRID_PADDING
+
+        # Apply offsets to TOP board
+        for row in self.top_buttons:
+            for button in row:
+                button.rect.x += center_x
+                button.rect.y += top_offset_y
+
+        # Apply offsets to BOTTOM board
         for row in self.bottom_buttons:
             for button in row:
-                button.rect.y += offset_y
+                button.rect.x += center_x
+                button.rect.y += bottom_offset_y
 
 
 
