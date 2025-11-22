@@ -13,11 +13,11 @@ def main():
     gui = client_gui.ClientGUI()
 
     while run: 
-        # Receive matrix updates for the active (TOP) board
+        # Receive matrix updates for the player's own board (BOTTOM)
         updated_str_matrix = n.get_matrix()
 
         if updated_str_matrix: 
-            top_matrix = uc.string_to_matrix(updated_str_matrix)
+            bottom_matrix = uc.string_to_matrix(updated_str_matrix)
 
         events = gui.process_events() # Checks for events, button down or close-game.
         if events["quit"]:

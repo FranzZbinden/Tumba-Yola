@@ -21,7 +21,11 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-matrices = {0: uc.create_matrix(), 1: uc.create_matrix()} # A dict: key = playerID, val = matrix
+# Initialize each player's board with randomly placed ships
+matrices = {
+    0: uc.generate_random_ships(size=uc.MAGNITUDE),
+    1: uc.generate_random_ships(size=uc.MAGNITUDE)
+} # A dict: key = playerID, val = matrix
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()
 clients = []                          # Store all connected clients
@@ -79,16 +83,20 @@ def threaded_client(conn, player):
                     with lock:
                         if player == current_turn:
                             try:
-                                # Update ONLY this player's matrix
-                                uc.assign_activation_to_cell(matrices[player], pos)
+                                # Update ONLY the opponent's matrix
+                                opponent = 1 - player
+                                uc.assign_activation_to_cell(matrices[opponent], pos)
                                 print(f"Player {player} pressed {pos}")
                                 current_turn = 1 - current_turn  # Change turn
 
                                 # Immediate ack to the requester
                                 conn.sendall(b"ack|ok\n")
 
-                                # Send updated matrix back to this player
-                                send_matrix(conn, matrices[player])
+                                # Send updated matrix to the opponent (so their client updates)
+                                for c in clients:
+                                    if conn_to_player.get(c) == opponent:
+                                        send_matrix(c, matrices[opponent])
+                                        break
                             except ValueError as e:
                                 conn.sendall(f"error|{e}\n".encode("utf-8"))
                         else:
