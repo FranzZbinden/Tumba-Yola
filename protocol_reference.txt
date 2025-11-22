@@ -1,0 +1,16 @@
+Protocol messages (dev reference)
+
+| Purpose                                                   | Type   | Divider | Payload (content)                              | Example message               | Actual string literal            |
+|---------------------------------------------              |--------|---------|------------------------------------            |-------------------------      |----------------------------------|
+| Send player name (client -> server)                       | name   | |       | Franz                                          | name|Franz\n                  | "name|Franz\n"                   |
+| Send attack tuple (client -> server)                      | attack | |       | r,c                                            | attack|2,3\n                  | "attack|2,3\n"                   |
+| Immediate success reply (server -> client)                | ack    | |       | ok                                             | ack|ok\n                      | "ack|ok\n"                       |
+| Error reply (server -> client)                            | error  | |       | human-readable text                            | error|It's not your turn\n    | "error|It's not your turn\n"     |
+| Broadcast/Send updated matrix (server -> client)          | matrix | |       | collapsed matrix string (rows ';', cols ',')   | matrix|0,1,0;1,0,0;0,0,0\n    | "matrix|0,1,0;1,0,0;0,0,0\n"     |
+| Optional attack outcome (server -> attacker)              | result | |       | hit|r,c or miss|r,c                            | result|hit|2,3\n              | "result|hit|2,3\n"               |
+
+Notes
+- Newline terminator (\n) is required on every message.
+- Matrix payload uses utilities.matrix_to_string: row values comma-separated, rows separated by semicolons.
+- Example literals above include quotes to emphasize exact string/escape content.
+

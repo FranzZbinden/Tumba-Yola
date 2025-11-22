@@ -66,14 +66,14 @@ class ClientGUI:
         for row in self.top_buttons:
             for button in row:
                 r, c = button.index # row, columns
-                button.color = uc.WHITE if top_matrix[r][c] == 0 else uc.BLACK
+                button.color = uc.color_for(top_matrix[r][c])
                 button.draw(self.window)
 
         # Draw bottom board
         for row in self.bottom_buttons:
             for button in row:
                 r, c = button.index
-                button.color = uc.WHITE if bottom_matrix[r][c] == 0 else uc.BLACK
+                button.color = uc.color_for(bottom_matrix[r][c])
                 button.draw(self.window)
 
         pygame.display.flip()

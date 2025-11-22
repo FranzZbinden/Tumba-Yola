@@ -13,10 +13,8 @@ def main():
     gui = client_gui.ClientGUI()
 
     while run: 
-        # Receive matrix updates for the player's own board (BOTTOM)
         updated_str_matrix = n.get_matrix()
-
-        if updated_str_matrix: 
+        if updated_str_matrix:
             bottom_matrix = uc.string_to_matrix(updated_str_matrix)
 
         events = gui.process_events() # Checks for events, button down or close-game.
@@ -25,7 +23,12 @@ def main():
         if events.get("top_click") is not None:
             pos_str = uc.make_pos(events["top_click"])
             reply = n.send(f"attack|{pos_str}")
-            print(f"Server response: {reply}")
+            # Expect single-line response: update|hit|r,c|<matrix> or update|miss|r,c|<matrix>
+            if reply and reply.startswith("update|"):
+                _, outcome, coord, _matrix_str = reply.split("|", 3)
+                r_str, c_str = coord.split(",")
+                r, c = int(r_str), int(c_str)
+                top_matrix[r][c] = 3 if outcome == "hit" else 2
 
         gui.draw(top_matrix, bottom_matrix)
     gui.shutdown()

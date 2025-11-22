@@ -5,6 +5,9 @@ BUTTON_WIDTH, BUTTON_HEIGHT = 45, 45
 DIVIDER = 10
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+RED = (255, 0, 0)
+GREY = (200, 200, 200)
 MAGNITUDE = 10
 
 def create_matrix() -> list: 
@@ -33,6 +36,29 @@ def assign_activation_to_cell(matrix: list, position: tuple):
         # TO-DO (handle error correctly)
     else:
         matrix[position[0]][position[1]] = 1
+
+
+    # Apply an attack to the given cell without overwriting ships blindly.
+
+    # Values:
+    #   0 -> white (empty)   -> set to 2 (blue, miss)
+    #   1 -> black (ship)    -> set to 3 (red, hit)
+    #   2 -> blue (miss)     -> already attacked here (no change, raise)
+    #   3 -> red (hit)       -> already attacked here (no change, raise)
+    # Returns the new cell value (2 for miss, 3 for hit).
+    # Raises ValueError if the cell has already been attacked (2 or 3).
+def apply_attack_to_cell(matrix: list, position: tuple) -> int:
+    row, col = position
+    current = matrix[row][col]
+    if current == 0:
+        matrix[row][col] = 2
+        return 2
+    if current == 1:
+        matrix[row][col] = 3
+        return 3
+    if current in (2, 3):
+        raise ValueError(f"Cell at {position} already attacked.")
+    raise ValueError(f"Invalid cell value {current} at {position}.")
 
 # Create grid of buttons
 def create_buttons(rows: int, cols: int) -> list:
@@ -98,3 +124,15 @@ def set_cell_attacked(cell_state_map: dict, position: tuple) -> None:
     if position not in cell_state_map:
         raise KeyError(f"Invalid cell position: {position}")
     cell_state_map[position] = True
+
+
+def color_for(value: int):
+    if value == 0:
+        return WHITE
+    if value == 1:
+        return BLACK
+    if value == 2:
+        return BLUE
+    if value == 3:
+        return RED
+    return GREY

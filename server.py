@@ -85,12 +85,14 @@ def threaded_client(conn, player):
                             try:
                                 # Update ONLY the opponent's matrix
                                 opponent = 1 - player
-                                uc.assign_activation_to_cell(matrices[opponent], pos)
+                                new_val = uc.apply_attack_to_cell(matrices[opponent], pos)  # 2 (miss, blue) or 3 (hit, red)
                                 print(f"Player {player} pressed {pos}")
                                 current_turn = 1 - current_turn  # Change turn
 
-                                # Immediate ack to the requester
-                                conn.sendall(b"ack|ok\n")
+                                # Single-line response to attacker with outcome and updated opponent matrix
+                                outcome = "hit" if new_val == 3 else "miss"
+                                matrix_str = uc.matrix_to_string(matrices[opponent])
+                                conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}|{matrix_str}\n".encode("utf-8"))
 
                                 # Send updated matrix to the opponent (so their client updates)
                                 for c in clients:
