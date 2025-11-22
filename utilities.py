@@ -140,3 +140,34 @@ def color_for(value: int):
     if value == 3:
         return RED
     return GREY
+
+
+# Process pygame events and return:
+#   { 'quit': bool, 'top_click': (row, col) | None }
+# Only the TOP grid is interactive.
+#
+# No relevant events in this frame:
+#     {"quit": False, "bottom_click": None}
+# Window close clicked:
+#     {"quit": True, "bottom_click": None}
+# Bottom grid cell clicked (example at row 3, col 5):
+#     {"quit": False, "bottom_click": (3, 5)}
+#
+# checks for events, button down or close-game.
+def process_top_click_events(top_buttons) -> dict:
+    import pygame  # local import for safety in non-GUI contexts
+    top_click = None
+    quit_flag = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            quit_flag = True
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Check TOP grid clicks
+            for row in top_buttons:
+                for button in row:
+                    if button.is_clicked(event.pos):
+                        top_click = button.index
+                        break
+                if top_click is not None:
+                    break
+    return {"quit": quit_flag, "top_click": top_click}

@@ -13,9 +13,9 @@ def main():
     gui = client_gui.ClientGUI()
 
     while run: 
-        updated_str_matrix = n.get_matrix()
+        updated_str_matrix = n.get_matrix() # recives self updated matrix
         if updated_str_matrix:
-            bottom_matrix = uc.string_to_matrix(updated_str_matrix)
+            bottom_matrix = uc.string_to_matrix(updated_str_matrix) # converts to 2d list
 
         events = gui.process_events() # Checks for events, button down or close-game.
         if events["quit"]:
