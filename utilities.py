@@ -81,15 +81,15 @@ def print_matrix(matrix):
     for row in matrix:
         print(' '.join(str(x) for x in row))
 
-# Generates random activation points inside a matrix
-def random_activ_matrix(matrix: list, cell_ammount: int):
-    activated = 0
-    while activated < cell_ammount:
-        x_rand = rdm.randint(0,MAGNITUDE-1)
-        y_rand = rdm.randint(0,MAGNITUDE-1)
-        if not check_cell_val(matrix, (x_rand,y_rand)):
-            matrix[x_rand][y_rand] = 1
-            activated += 1
+# # Generates random activation points inside a matrix
+# def random_activ_matrix(matrix: list, cell_ammount: int):
+#     activated = 0
+#     while activated < cell_ammount:
+#         x_rand = rdm.randint(0,MAGNITUDE-1)
+#         y_rand = rdm.randint(0,MAGNITUDE-1)
+#         if not check_cell_val(matrix, (x_rand,y_rand)):
+#             matrix[x_rand][y_rand] = 1
+#             activated += 1
 
 
 def generate_random_ships(size=10, ships=[5, 4, 3, 3, 2]):
@@ -171,3 +171,73 @@ def process_top_click_events(top_buttons) -> dict:
                 if top_click is not None:
                     break
     return {"quit": quit_flag, "top_click": top_click}
+
+
+# Places a ship of given length on the board.
+# # Returns a list of coordinates the ship occupies.
+# def place_ship_randomly(board, length):
+#     size = len(board)
+
+#     while True:
+#         orientation = rdm.choice(["H", "V"])
+
+#         if orientation == "H":
+#             row = rdm.randint(0, size - 1)
+#             col = rdm.randint(0, size - length)
+#             coords = [(row, col + i) for i in range(length)]
+#         else:
+#             row = rdm.randint(0, size - length)
+#             col = rdm.randint(0, size - 1)
+#             coords = [(row + i, col) for i in range(length)]
+
+#         # Check collision
+#         if all(board[r][c] == 0 for r, c in coords):
+#             # Place the ship
+#             for r, c in coords:
+#                 board[r][c] = 1
+#             return coords  # HERE YOU KNOW start + end + cells
+
+# List of Tuples within list:
+
+# Places multiple ships on the board.
+# Returns a list of ship dictionaries.
+def generate_fleet(board, ship_lengths):
+    fleet = []
+
+    for length in ship_lengths:
+        ship = place_ship_randomly(board, length)
+        fleet.append(ship)
+
+    return fleet
+
+    # Places a ship of given length on the board.
+    # Returns a list-of-lists like: [[(r,c)], [(r,c)], ...]
+    # Also returns start, end, and direction.
+def place_ship_randomly(board, length):
+    size = len(board)
+
+    while True:
+        orientation = rdm.choice(["H", "V"])
+
+        if orientation == "H":
+            row = rdm.randint(0, size - 1)
+            col = rdm.randint(0, size - length)
+            coords = [[(row, col + i)] for i in range(length)]
+        else:
+            row = rdm.randint(0, size - length)
+            col = rdm.randint(0, size - 1)
+            coords = [[(row + i, col)] for i in range(length)]
+
+        # Collision check
+        if all(board[r][c] == 0 for [(r, c)] in coords):
+
+            # Place the ship
+            for [(r, c)] in coords:
+                board[r][c] = 1
+
+            return {
+                "coords": coords,              # list of lists of tuples (len = cantidad de botonoes por barco)
+                "start": coords[0],
+                "end": coords[-1],
+                "dir": "horizontal" if orientation == "H" else "vertical"
+            }

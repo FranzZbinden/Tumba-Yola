@@ -21,12 +21,20 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
+Matrix1 = uc.create_matrix()
+Matrix2 = uc.create_matrix()
+
+tuple_example1 = uc.place_ship_randomly(Matrix1, uc.MAGNITUDE)
+tuple_example1 = uc.place_ship_randomly(Matrix2, uc.MAGNITUDE)
+
 # A dict: key = playerID, val = matrix
 # Initialize each player's board with randomly placed ships
 matrices = {
     0: uc.generate_random_ships(size=uc.MAGNITUDE),
     1: uc.generate_random_ships(size=uc.MAGNITUDE)
 } 
+
+
 
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()
