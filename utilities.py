@@ -44,15 +44,6 @@ def assign_activation_to_cell(matrix: list, position: tuple):
         matrix[position[0]][position[1]] = 1
 
 
-    # Apply an attack to the given cell without overwriting ships blindly.
-
-    # Values:
-    #   0 -> white (empty)   -> set to 2 (blue, miss)
-    #   1 -> black (ship)    -> set to 3 (red, hit)
-    #   2 -> blue (miss)     -> already attacked here (no change, raise)
-    #   3 -> red (hit)       -> already attacked here (no change, raise)
-    # Returns the new cell value (2 for miss, 3 for hit).
-    # Raises ValueError if the cell has already been attacked (2 or 3).
 def apply_attack_to_cell(matrix: list, position: tuple) -> int:
     row, col = position
     current = matrix[row][col]
@@ -144,17 +135,6 @@ def color_for(value: int):
     return GREY
 
 
-# Process pygame events and return:
-#   { 'quit': bool, 'top_click': (row, col) | None }
-# Only the TOP grid is interactive.
-#
-# No relevant events in this frame:
-#     {"quit": False, "bottom_click": None}
-# Window close clicked:
-#     {"quit": True, "bottom_click": None}
-# Bottom grid cell clicked (example at row 3, col 5):
-#     {"quit": False, "bottom_click": (3, 5)}
-#
 # checks for events, button down or close-game.
 def process_top_click_events(top_buttons) -> dict:
     import pygame  # local import for safety in non-GUI contexts
@@ -175,31 +155,6 @@ def process_top_click_events(top_buttons) -> dict:
     return {"quit": quit_flag, "top_click": top_click}
 
 
-# Places a ship of given length on the board.
-# # Returns a list of coordinates the ship occupies.
-# def place_ship_randomly(board, length):
-#     size = len(board)
-
-#     while True:
-#         orientation = rdm.choice(["H", "V"])
-
-#         if orientation == "H":
-#             row = rdm.randint(0, size - 1)
-#             col = rdm.randint(0, size - length)
-#             coords = [(row, col + i) for i in range(length)]
-#         else:
-#             row = rdm.randint(0, size - length)
-#             col = rdm.randint(0, size - 1)
-#             coords = [(row + i, col) for i in range(length)]
-
-#         # Check collision
-#         if all(board[r][c] == 0 for r, c in coords):
-#             # Place the ship
-#             for r, c in coords:
-#                 board[r][c] = 1
-#             return coords  # HERE YOU KNOW start + end + cells
-
-# List of Tuples within list:
 
 # Places multiple ships on the board.
 # Returns a list of ship dictionaries.
@@ -273,9 +228,9 @@ def normalize_fleet_for_wire(fleet_obj: list) -> str:
     payload = {"ships": ships_out}
     return json.dumps(payload, separators=(",", ":"))
 
-# ---------- Sprites rendering helpers ----------
-_SHIP_SPRITES_CACHE = None
+# ---------- Sprites rendering helpers ------------------
 
+# scale down the image and smooth it
 def _load_scaled_image(candidate_paths: list, width: int, height: int):
     import pygame  # local import to avoid GUI dependency on server
     last_err = None
@@ -289,16 +244,11 @@ def _load_scaled_image(candidate_paths: list, width: int, height: int):
     if last_err:
         raise last_err
 
+
+    # Returns a dict containing scaled ship part sprites for both orientations.
+    # Paths try subfolders first (sprites/horizontal, sprites/vertical), then root sprites/.
 def _get_ship_sprites():
-    """
-    Returns a dict containing scaled ship part sprites for both orientations.
-    Paths try subfolders first (sprites/horizontal, sprites/vertical), then root sprites/.
-    """
-    global _SHIP_SPRITES_CACHE
-    if _SHIP_SPRITES_CACHE is not None:
-        return _SHIP_SPRITES_CACHE
     import pygame  # local import
-    w, h = BUTTON_WIDTH, BUTTON_HEIGHT
 
     # Candidate paths: prefer subfolders; fallback to root-level files
     horiz_start_paths = [
@@ -327,28 +277,26 @@ def _get_ship_sprites():
         os.path.join("sprites", "v.jpeg"),
     ]
 
+    # makes losts of boat sprites at scale smooth
     sprites = {
         "horizontal": {
-            "start": _load_scaled_image(horiz_start_paths, w, h),
-            "mid": _load_scaled_image(horiz_mid_paths, w, h),
-            "end": _load_scaled_image(horiz_end_paths, w, h),
+            "start": _load_scaled_image(horiz_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "mid": _load_scaled_image(horiz_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "end": _load_scaled_image(horiz_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
         },
         "vertical": {
-            "start": _load_scaled_image(vert_start_paths, w, h),
-            "mid": _load_scaled_image(vert_mid_paths, w, h),
-            "end": _load_scaled_image(vert_end_paths, w, h),
+            "start": _load_scaled_image(vert_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "mid": _load_scaled_image(vert_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "end": _load_scaled_image(vert_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
         },
     }
-    _SHIP_SPRITES_CACHE = sprites
     return sprites
 
+    # Assign boat sprites to the corresponding Button.image based on the fleet payload.
+    # - surface: pygame Surface (unused here; kept for backward compatibility)
+    # - fleet_payload: JSON string (or dict) in the format produced by normalize_fleet_for_wire
+    # - button_grid: 2D list of Button objects (for positions/sizes); this function sets Button.image
 def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
-    """
-    Assign boat sprites to the corresponding Button.image based on the fleet payload.
-    - surface: pygame Surface (unused here; kept for backward compatibility)
-    - fleet_payload: JSON string (or dict) in the format produced by normalize_fleet_for_wire
-    - button_grid: 2D list of Button objects (for positions/sizes); this function sets Button.image
-    """
     if not fleet_payload:
         return
     import pygame  # local import
@@ -406,3 +354,14 @@ def get_local_ip() -> str:
         except Exception:
             return "127.0.0.1"
 
+
+# Build initial matrices and fleets for two players (for serverS)
+def init_matrices_and_fleets():
+    matrices = {}
+    fleets = {}
+    for pid in (0, 1):
+        matrix = create_matrix()
+        fleet = generate_fleet(matrix, [3, 4, 5, 6])
+        matrices[pid] = matrix
+        fleets[pid] = fleet
+    return matrices, fleets

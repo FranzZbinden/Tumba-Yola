@@ -127,3 +127,39 @@ class Socket_:
             return None
         finally:
             self.client.setblocking(True)
+
+
+        # Non-blocking retrieval of a win notification line if available.
+        # Returns the payload after 'win|' once, otherwise None.
+    def get_win(self) -> str | None:
+        try:
+            self.client.setblocking(False)
+            while True:
+                i = self._buf.find(b"\n")
+                if i == -1:
+                    chunk = self.client.recv(4096)
+                    if not chunk:
+                        return None
+                    self._buf.extend(chunk)
+                    continue
+                line = self._buf[:i].decode("utf-8")
+                del self._buf[:i+1]
+                if line.startswith("win|"):
+                    return line.split("|", 1)[1]
+                # Put back matrix lines for other consumers
+                if line.startswith("matrix|"):
+                    self._buf[:0] = f"{line}\n".encode("utf-8")
+                    return None
+                # Cache fleet lines so get_fleet can retrieve
+                if line.startswith("fleet|"):
+                    self._last_fleet_json = line.split("|", 1)[1]
+                    return None
+                if len(self._buf) == 0:
+                    return None
+        except BlockingIOError:
+            return None
+        except Exception as e:
+            print("Receive failed:", e)
+            return None
+        finally:
+            self.client.setblocking(True)

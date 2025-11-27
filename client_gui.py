@@ -63,7 +63,11 @@ class ClientGUI:
         for row in self.bottom_buttons:
             for button in row:
                 r, c = button.index
-                button.color = uc.color_for(bottom_matrix[r][c])
+                cell_val = bottom_matrix[r][c]
+                button.color = uc.color_for(cell_val)
+                # If ship cell was hit, remove sprite so red shows through
+                if cell_val == 3 and hasattr(button, "image"):
+                    button.image = None
                 button.draw(self.window)
 
         pygame.display.flip()

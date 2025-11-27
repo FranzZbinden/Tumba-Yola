@@ -2,6 +2,7 @@ from socket_ import Socket_
 import utilities as uc
 import client_gui as client_gui
 import sys
+import end_screen
 
 clientNumber = 0 
 top_matrix = uc.create_matrix() # <<---- TOP BOARD 
@@ -17,6 +18,7 @@ def main():
     n = Socket_(server_ip)
     gui = client_gui.ClientGUI()
     fleet_json = None
+    TOTAL_SHIP_CELLS = 18
 
     while run: 
         # Try to capture initial fleet payload once and assign sprites into buttons
@@ -26,9 +28,20 @@ def main():
                 fleet_json = maybe_fleet
                 uc.procces_boats_sprites(None, fleet_json, gui.bottom_buttons)
 
+        # Check for win notification from server
+        win_msg = n.get_win()
+        if win_msg:
+            end_screen.show_end_screen("You won")
+            break
+
         updated_str_matrix = n.get_matrix() # recives self updated matrix
         if updated_str_matrix:
             bottom_matrix = uc.string_to_matrix(updated_str_matrix) # converts to 2d list
+            # Detect loss: all ship cells have been hit
+            hits = sum(1 for row in bottom_matrix for v in row if v == 3)
+            if hits >= TOTAL_SHIP_CELLS:
+                end_screen.show_end_screen("You Lose")
+                break
 
         events = gui.process_events() # Checks for events, button down or close-game.
         if events["quit"]:

@@ -15,3 +15,13 @@ Notes
 - Matrix payload uses utilities.matrix_to_string: row values comma-separated, rows separated by semicolons.
 - Example literals above include quotes to emphasize exact string/escape content.
 
+
+ Apply an attack to the given cell without overwriting ships blindly.
+
+     Values:
+       0 -> white (empty)   -> set to 2 (blue, miss)
+       1 -> black (ship)    -> set to 3 (red, hit)
+       2 -> blue (miss)     -> already attacked here, no change
+       3 -> red (hit)       -> already attacked here, no change
+     Returns the new cell value (2 for miss, 3 for hit).
+     Raises ValueError if the cell has already been attacked (2 or 3).

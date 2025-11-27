@@ -19,24 +19,17 @@ except socket.error as e:
     print(f"Bind failed on {server}:{port} -> {e}")
     sys.exit(1)
 
-s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
+s.listen(2) 
 print(f"Server started on {server}:{port}. Waiting for connection...")
 
-# A dict: key = playerID, val = matrix and fleets
-# Initialize each player's matrix using fleet-based ship placement
-matrices = {}
-fleets = {}
-for pid in (0, 1):
-    matrix = uc.create_matrix()
-    fleet = uc.generate_fleet(matrix, [3, 4, 5, 6])
-    matrices[pid] = matrix
-    fleets[pid] = fleet
-
-
+# Initialize per-player matrices and fleets 
+matrices, fleets = uc.init_matrices_and_fleets()
 current_turn = 0                      # 0 = player 1, 1 = player 2
 lock = threading.Lock()
 clients = []                          # Store all connected clients
 conn_to_player = {}                   # Map each connection to its player id
+hit_counts = {0: 0, 1: 0}             # Successful hits per player (attacks landed on opponent)
+TOTAL_SHIP_CELLS = 18                 # 3 + 4 + 5 + 6
 
 def send_matrix(conn, matrix):
     try:
@@ -45,7 +38,6 @@ def send_matrix(conn, matrix):
     except:
         pass
 
-# new threadded_client
 def threaded_client(conn, player):
     global current_turn     # Modify var in global scope
     
@@ -106,6 +98,12 @@ def threaded_client(conn, player):
                                 outcome = "hit" if new_val == 3 else "miss"
                                 matrix_str = uc.matrix_to_string(matrices[opponent])
                                 conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}|{matrix_str}\n".encode("utf-8"))
+
+                                # Track hits and check winner
+                                if new_val == 3:
+                                    hit_counts[player] += 1
+                                    if hit_counts[player] >= TOTAL_SHIP_CELLS:
+                                        conn.sendall(b"win|You won\n")
 
                                 # Send updated matrix to the opponent (so their client updates)
                                 for c in clients:
