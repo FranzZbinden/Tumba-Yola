@@ -22,16 +22,4 @@ list_example = uc.generate_fleet(Matrix1,[3,4,5,6])
 # print ()
 # print (tuple_example1)
 
-def print_fleet(list_example):
-    print("\n=== SHIPS IN BOARD ===")
-
-    for i, ship in enumerate(list_example):
-        print(f"\nShip {i+1}:")
-        print(f"  Direction: {ship['dir']}")
-        print(f"  Start: {ship['start']}")
-        print(f"  End:   {ship['end']}")
-        print(f"  Coords:")
-        for c in ship["coords"]:
-            print(f"    {c}")
-
-print_fleet(list_example)
+uc.print_fleet(list_example)

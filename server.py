@@ -21,19 +21,15 @@ except socket.error as e:
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
 print("Waiting for connection, server started...")
 
-Matrix1 = uc.create_matrix()
-Matrix2 = uc.create_matrix()
-
-tuple_example1 = uc.place_ship_randomly(Matrix1, uc.MAGNITUDE)
-tuple_example1 = uc.place_ship_randomly(Matrix2, uc.MAGNITUDE)
-
-# A dict: key = playerID, val = matrix
-# Initialize each player's board with randomly placed ships
-matrices = {
-    0: uc.generate_random_ships(size=uc.MAGNITUDE),
-    1: uc.generate_random_ships(size=uc.MAGNITUDE)
-} 
-
+# A dict: key = playerID, val = matrix and fleets
+# Initialize each player's matrix using fleet-based ship placement
+matrices = {}
+fleets = {}
+for pid in (0, 1):
+    matrix = uc.create_matrix()
+    fleet = uc.generate_fleet(matrix, [3, 4, 5, 6])
+    matrices[pid] = matrix
+    fleets[pid] = fleet
 
 
 current_turn = 0                      # 0 = player 1, 1 = player 2
@@ -60,8 +56,14 @@ def threaded_client(conn, player):
     conn.sendall(f"ack|You are player: {player}\n".encode("utf-8"))
     print(f"Player {player} connected.")
 
-        # Send initial matrix to this client
+        # Send initial fleet and matrix to this client
     with lock:
+        # Send fleet payload for processing by the client
+        try:
+            fleet_json = uc.normalize_fleet_for_wire(fleets[player])
+            conn.sendall(f"fleet|{fleet_json}\n".encode("utf-8"))
+        except Exception as e:
+            conn.sendall(f"error|Fleet unavailable: {e}\n".encode("utf-8"))
         send_matrix(conn, matrices[player])
 
     while True:

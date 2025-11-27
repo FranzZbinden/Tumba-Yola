@@ -12,6 +12,7 @@ class Socket_:
         self.port = 5555
         self.addr = (self.server, self.port)
         self._buf = bytearray()
+        self._last_fleet_json = None
         self.connect()
 
 
@@ -58,6 +59,13 @@ class Socket_:
                 # Extract one line and check if it is a matrix
                 line = self._buf[:i].decode("utf-8")
                 del self._buf[:i+1]
+                if line.startswith("fleet|"):
+                    # Cache fleet for consumers
+                    self._last_fleet_json = line.split("|", 1)[1]
+                    # Continue scanning for matrix
+                    if len(self._buf) == 0:
+                        return None
+                    continue
                 if line.startswith("matrix|"):
                     return line.split("|", 1)[1]
                 # ignore non-matrix lines here
@@ -84,3 +92,40 @@ class Socket_:
         except socket.error as e: 
             print(e)
             return None
+
+    def get_fleet(self) -> str | None:
+        """
+        Non-blocking retrieval of fleet JSON payload if available.
+        Returns cached payload once, then clears it.
+        """
+        if self._last_fleet_json is not None:
+            payload = self._last_fleet_json
+            self._last_fleet_json = None
+            return payload
+        try:
+            self.client.setblocking(False)
+            while True:
+                i = self._buf.find(b"\n")
+                if i == -1:
+                    chunk = self.client.recv(4096)
+                    if not chunk:
+                        return None
+                    self._buf.extend(chunk)
+                    continue
+                line = self._buf[:i].decode("utf-8")
+                del self._buf[:i+1]
+                if line.startswith("fleet|"):
+                    return line.split("|", 1)[1]
+                # Put back matrix lines for get_matrix to consume
+                if line.startswith("matrix|"):
+                    self._buf[:0] = f"{line}\n".encode("utf-8")
+                    return None
+                if len(self._buf) == 0:
+                    return None
+        except BlockingIOError:
+            return None
+        except Exception as e:
+            print("Receive failed:", e)
+            return None
+        finally:
+            self.client.setblocking(True)

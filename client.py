@@ -11,8 +11,16 @@ def main():
     run = True
     n = Socket_()
     gui = client_gui.ClientGUI()
+    fleet_json = None
 
     while run: 
+        # Try to capture initial fleet payload once and assign sprites into buttons
+        if fleet_json is None:
+            maybe_fleet = n.get_fleet()
+            if maybe_fleet:
+                fleet_json = maybe_fleet
+                uc.procces_boats_sprites(None, fleet_json, gui.bottom_buttons)
+
         updated_str_matrix = n.get_matrix() # recives self updated matrix
         if updated_str_matrix:
             bottom_matrix = uc.string_to_matrix(updated_str_matrix) # converts to 2d list

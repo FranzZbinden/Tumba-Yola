@@ -8,6 +8,7 @@ Protocol messages (dev reference)
 | Error reply (server -> client)                            | error  | |       | human-readable text                            | error|It's not your turn\n    | "error|It's not your turn\n"     |
 | Broadcast/Send updated matrix (server -> client)          | matrix | |       | collapsed matrix string (rows ';', cols ',')   | matrix|0,1,0;1,0,0;0,0,0\n    | "matrix|0,1,0;1,0,0;0,0,0\n"     |
 | Optional attack outcome (server -> attacker)              | result | |       | hit|r,c or miss|r,c                            | result|hit|2,3\n              | "result|hit|2,3\n"               |
+| Send initial fleet metadata (server -> client)            | fleet  | |       | JSON: {"ships":[{"cells":[[r,c],...],"start":[r,c],"end":[r,c],"dir":"H|V"},...]} | fleet|{"ships":[{"cells":[[0,1],[0,2]],"start":[0,1],"end":[0,2],"dir":"horizontal"}]}\n | "fleet|{...}\n" |
 
 Notes
 - Newline terminator (\n) is required on every message.

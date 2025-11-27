@@ -1,9 +1,11 @@
 import button as btn
 import random as rdm
+import json
+import os
 
 # Boards
 BUTTON_WIDTH, BUTTON_HEIGHT = 50, 50
-DIVIDER = 5
+DIVIDER = 1
 MAGNITUDE = 10
 
 # Colors
@@ -241,3 +243,150 @@ def place_ship_randomly(board, length):
                 "end": coords[-1],
                 "dir": "horizontal" if orientation == "H" else "vertical"
             }
+
+def print_fleet(list_example):
+    print("\n=== SHIPS IN BOARD ===")
+
+    for i, ship in enumerate(list_example):
+        print(f"\nShip{i+1}:")
+        print(f"Direction:{ship['dir']}")
+        print(f"Start:{ship['start']}")
+        print(f"End:{ship['end']}")
+        print(f"Coords:")
+        for c in ship["coords"]:
+            print(f"{c}")
+
+
+# Convert generate_fleet return (list of ship dicts) to a compact JSON
+# with integer coords, suitable for sending over the socket in one line.
+def normalize_fleet_for_wire(fleet_obj: list) -> str:
+    ships_out = []
+    for ship in fleet_obj:
+        # coords is a list of lists with one tuple [(r,c)] in each inner list
+        cells = [[r, c] for [(r, c)] in ship.get("coords", [])]
+        ships_out.append({
+            "cells": cells,
+            "start": cells[0] if cells else None,
+            "end": cells[-1] if cells else None,
+            "dir": ship.get("dir"),
+        })
+    payload = {"ships": ships_out}
+    return json.dumps(payload, separators=(",", ":"))
+
+# ---------- Sprites rendering helpers ----------
+_SHIP_SPRITES_CACHE = None
+
+def _load_scaled_image(candidate_paths: list, width: int, height: int):
+    import pygame  # local import to avoid GUI dependency on server
+    last_err = None
+    for path in candidate_paths:
+        try:
+            img = pygame.image.load(path).convert_alpha()
+            return pygame.transform.smoothscale(img, (width, height))
+        except Exception as e:
+            last_err = e
+            continue
+    if last_err:
+        raise last_err
+
+def _get_ship_sprites():
+    """
+    Returns a dict containing scaled ship part sprites for both orientations.
+    Paths try subfolders first (sprites/horizontal, sprites/vertical), then root sprites/.
+    """
+    global _SHIP_SPRITES_CACHE
+    if _SHIP_SPRITES_CACHE is not None:
+        return _SHIP_SPRITES_CACHE
+    import pygame  # local import
+    w, h = BUTTON_WIDTH, BUTTON_HEIGHT
+
+    # Candidate paths: prefer subfolders; fallback to root-level files
+    horiz_start_paths = [
+        os.path.join("sprites", "horizontal", "{[.jpeg"),
+        os.path.join("sprites", "{[.jpeg"),
+    ]
+    horiz_mid_paths = [
+        os.path.join("sprites", "horizontal", "l_l_l.jpeg"),
+        os.path.join("sprites", "l_l_l.jpeg"),
+    ]
+    horiz_end_paths = [
+        os.path.join("sprites", "horizontal", "]}.jpeg"),
+        os.path.join("sprites", "]}.jpeg"),
+    ]
+
+    vert_start_paths = [
+        os.path.join("sprites", "vertical", "^.jpeg"),
+        os.path.join("sprites", "^.jpeg"),
+    ]
+    vert_mid_paths = [
+        os.path.join("sprites", "vertical", "lEl.jpeg"),
+        os.path.join("sprites", "lEl.jpeg"),
+    ]
+    vert_end_paths = [
+        os.path.join("sprites", "vertical", "v.jpeg"),
+        os.path.join("sprites", "v.jpeg"),
+    ]
+
+    sprites = {
+        "horizontal": {
+            "start": _load_scaled_image(horiz_start_paths, w, h),
+            "mid": _load_scaled_image(horiz_mid_paths, w, h),
+            "end": _load_scaled_image(horiz_end_paths, w, h),
+        },
+        "vertical": {
+            "start": _load_scaled_image(vert_start_paths, w, h),
+            "mid": _load_scaled_image(vert_mid_paths, w, h),
+            "end": _load_scaled_image(vert_end_paths, w, h),
+        },
+    }
+    _SHIP_SPRITES_CACHE = sprites
+    return sprites
+
+def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
+    """
+    Assign boat sprites to the corresponding Button.image based on the fleet payload.
+    - surface: pygame Surface (unused here; kept for backward compatibility)
+    - fleet_payload: JSON string (or dict) in the format produced by normalize_fleet_for_wire
+    - button_grid: 2D list of Button objects (for positions/sizes); this function sets Button.image
+    """
+    if not fleet_payload:
+        return
+    import pygame  # local import
+    try:
+        fleet = fleet_payload if isinstance(fleet_payload, dict) else json.loads(fleet_payload)
+    except Exception:
+        return
+    sprites = _get_ship_sprites()
+
+    # Clear any previous images
+    for row in button_grid:
+        for b in row:
+            if hasattr(b, "image"):
+                b.image = None
+
+    ships = fleet.get("ships", [])
+    for ship in ships:
+        direction = ship.get("dir", "horizontal")
+        cells = ship.get("cells", [])
+        if not cells:
+            continue
+        n = len(cells)
+        for i, cell in enumerate(cells):
+            # cell is [row, col]
+            try:
+                r, c = int(cell[0]), int(cell[1])
+            except Exception:
+                continue
+            if r < 0 or c < 0 or r >= len(button_grid) or c >= len(button_grid[0]):
+                continue
+            part = "mid"
+            if i == 0:
+                part = "start"
+            elif i == n - 1:
+                part = "end"
+            img = sprites.get(direction, {}).get(part)
+            if img is None:
+                continue
+            btn = button_grid[r][c]
+            if hasattr(btn, "image"):
+                btn.image = img
