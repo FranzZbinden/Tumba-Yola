@@ -51,6 +51,10 @@ class ClientGUI:
         # Labels (Enemy)
         enemy_surf = self.font.render("Enemy", True, uc.BLACK)
         self.window.blit(enemy_surf, (10, 10))
+        # Label (You) at bottom-right
+        you_surf = self.font.render("You", True, uc.BLACK)
+        self.window.blit(you_surf, (self.window.get_width() - you_surf.get_width() - 10,
+                                     self.window.get_height() - you_surf.get_height() - 10))
 
         # Draw top board
         for row in self.top_buttons:
