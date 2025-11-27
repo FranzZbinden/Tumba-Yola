@@ -1,15 +1,13 @@
 import socket
-from dotenv import load_dotenv
-import os
 
-load_dotenv()
-ip = os.getenv("IP") or "127.0.0.1" #ip for testing
 
 class Socket_:
-    def __init__(self):
+    def __init__(self, server_ip: str, port: int = 5555):
+        if not server_ip:
+            raise ValueError("server_ip is required")
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server = ip
-        self.port = 5555
+        self.server = server_ip
+        self.port = port
         self.addr = (self.server, self.port)
         self._buf = bytearray()
         self._last_fleet_json = None

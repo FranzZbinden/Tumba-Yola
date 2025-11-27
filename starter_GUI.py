@@ -1,6 +1,8 @@
 import pygame
 import sys
 import os
+import subprocess
+from pathlib import Path
 
 pygame.init()
 
@@ -101,10 +103,15 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if start_btn_rect.collidepoint(event.pos):
-                # UI only for now: just print entered IP and exit
-                print(f"Start pressed with IP: '{ip_box.get_value()}'")
-                pygame.quit()
-                sys.exit()
+                typed = ip_box.get_value()
+                if not typed:
+                    print("Please enter a server IP.")
+                else:
+                    host = typed.strip()
+                    project_root = Path(__file__).parent
+                    subprocess.Popen([sys.executable, "client.py", host], cwd=project_root)
+                    pygame.quit()
+                    sys.exit()
             if quit_btn_rect.collidepoint(event.pos):
                 pygame.quit()
                 sys.exit()

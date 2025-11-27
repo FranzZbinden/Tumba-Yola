@@ -1,6 +1,7 @@
 from socket_ import Socket_
 import utilities as uc
 import client_gui as client_gui
+import sys
 
 clientNumber = 0 
 top_matrix = uc.create_matrix() # <<---- TOP BOARD 
@@ -9,7 +10,11 @@ bottom_matrix = uc.create_matrix() # <<---- botton BOARD
 def main():
     global top_matrix, bottom_matrix
     run = True
-    n = Socket_()
+    if len(sys.argv) < 2 or not sys.argv[1].strip():
+        print("Usage: python client.py <server_ip>")
+        sys.exit(1)
+    server_ip = sys.argv[1].strip()
+    n = Socket_(server_ip)
     gui = client_gui.ClientGUI()
     fleet_json = None
 

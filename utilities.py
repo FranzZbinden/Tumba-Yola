@@ -390,3 +390,19 @@ def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
             btn = button_grid[r][c]
             if hasattr(btn, "image"):
                 btn.image = img
+
+
+# Get ip for server
+def get_local_ip() -> str:
+    try:
+        import socket
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s_probe:
+            s_probe.connect(("8.8.8.8", 80))
+            return s_probe.getsockname()[0]
+    except Exception:
+        try:
+            import socket
+            return socket.gethostbyname(socket.gethostname())
+        except Exception:
+            return "127.0.0.1"
+

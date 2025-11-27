@@ -7,7 +7,7 @@ import os
 import utilities as uc
 
 load_dotenv()
-server = os.getenv("IP") or "127.0.0.1" # ip for testing
+server = uc.get_local_ip()
 port = 5555     
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
@@ -16,10 +16,11 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket ob
 try:
     s.bind((server,port))
 except socket.error as e: 
-    str(e)
+    print(f"Bind failed on {server}:{port} -> {e}")
+    sys.exit(1)
 
 s.listen(2) # For opening the port, the number inside the parameter is the limit of users connected to the server
-print("Waiting for connection, server started...")
+print(f"Server started on {server}:{port}. Waiting for connection...")
 
 # A dict: key = playerID, val = matrix and fleets
 # Initialize each player's matrix using fleet-based ship placement
