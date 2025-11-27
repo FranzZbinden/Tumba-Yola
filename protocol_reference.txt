@@ -1,7 +1,7 @@
-Protocol messages (dev reference)
+Protocol messages
 
-| Purpose                                                   | Type   | Divider | Payload (content)                              | Example message               | Actual string literal            |
-|---------------------------------------------              |--------|---------|------------------------------------            |-------------------------      |----------------------------------|
+| Purpose                                                   | Type   | Divider | Content                                        | Example message               | Actual string                    |
+|-----------------------------------------------------------|--------|---------|------------------------------------------------|-------------------------------|----------------------------------|
 | Send player name (client -> server)                       | name   | |       | Franz                                          | name|Franz\n                  | "name|Franz\n"                   |
 | Send attack tuple (client -> server)                      | attack | |       | r,c                                            | attack|2,3\n                  | "attack|2,3\n"                   |
 | Immediate success reply (server -> client)                | ack    | |       | ok                                             | ack|ok\n                      | "ack|ok\n"                       |

@@ -5,7 +5,7 @@ import os
 pygame.init()
 
 # Window
-WIDTH, HEIGHT = 900, 600
+WIDTH, HEIGHT = 1200, 800
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("TumbaYola - Start Screen")
 clock = pygame.time.Clock()
@@ -23,6 +23,7 @@ BG_COLOR = (30, 61, 89)
 BUTTON_COLOR = (245, 166, 35)
 EXIT_COLOR = (231, 76, 60)
 TEXT_COLOR = (255, 255, 255)
+TEXT_COLOR_INPUT = (25, 25, 25)
 INPUT_BG = (255, 255, 255)
 INPUT_BORDER = (20, 20, 20)
 INPUT_ACTIVE = (80, 140, 230)
@@ -64,7 +65,7 @@ class InputBox:
         pygame.draw.rect(surf, INPUT_ACTIVE if self.active else INPUT_BORDER, self.rect, 2, border_radius=6)
         # Text
         content = self.text if self.text else self.placeholder
-        color = TEXT_COLOR if self.text else PLACEHOLDER_COLOR
+        color = TEXT_COLOR_INPUT if self.text else PLACEHOLDER_COLOR
         txt_surf = font_input.render(content, True, color)
         surf.blit(txt_surf, (self.rect.x + 12, self.rect.y + (self.rect.height - txt_surf.get_height()) // 2))
 
@@ -79,17 +80,19 @@ def draw_button(surf, rect, text, bg_color):
     surf.blit(txt, (rect.centerx - txt.get_width() // 2, rect.y + (rect.height - txt.get_height()) // 2))
 
 
-# Layout
-title_y = 80
-ip_label_y = 210
+# Inline bottom layout configuration
 input_w, input_h = 360, 44
-input_x = (WIDTH - input_w) // 2
-input_y = ip_label_y + 28
 btn_w, btn_h = 220, 50
-start_btn_rect = pygame.Rect((WIDTH - btn_w) // 2, input_y + input_h + 28, btn_w, btn_h)
-quit_btn_rect = pygame.Rect((WIDTH - btn_w) // 2, start_btn_rect.bottom + 16, btn_w, btn_h)
 
-ip_box = InputBox(input_x, input_y, input_w, input_h)
+# Spacing
+gap_input_start = 24
+gap_between_buttons = 16
+margin_bottom = 60
+
+# Prepare UI objects
+ip_box = InputBox(0, 0, input_w, input_h)
+start_btn_rect = pygame.Rect(0, 0, btn_w, btn_h)
+quit_btn_rect = pygame.Rect(0, 0, btn_w, btn_h)
 
 running = True
 while running:
@@ -107,22 +110,35 @@ while running:
                 sys.exit()
         ip_box.handle_event(event)
 
+    # Compute dynamic positions each frame (center the whole bottom row)
+    group_height = btn_h
+    y = HEIGHT - margin_bottom - group_height
+    group_width = input_w + gap_input_start + btn_w + gap_between_buttons + btn_w
+    x0 = (WIDTH - group_width) // 2
+
+    # Positions
+    input_x = x0
+    input_y = y + (btn_h - input_h) // 2
+
+    start_x = input_x + input_w + gap_input_start
+    start_y = y
+
+    quit_x = start_x + btn_w + gap_between_buttons
+    quit_y = y
+
+    # Update rects
+    ip_box.rect.x, ip_box.rect.y = input_x, input_y
+    start_btn_rect.x, start_btn_rect.y = start_x, start_y
+    quit_btn_rect.x, quit_btn_rect.y = quit_x, quit_y
+
     # Background
     if bg_img is not None:
         screen.blit(bg_img, (0, 0))
     else:
         screen.fill(BG_COLOR)
 
-    # Title
-    title_surface = font_title.render("Tumba-Yola", True, TEXT_COLOR)
-    screen.blit(title_surface, (WIDTH // 2 - title_surface.get_width() // 2, title_y))
-
-    # IP Label and Input
-    ip_label = font_label.render("Server IP", True, TEXT_COLOR)
-    screen.blit(ip_label, (WIDTH // 2 - ip_label.get_width() // 2, ip_label_y))
+    # Draw inline bottom row: input + buttons
     ip_box.draw(screen)
-
-    # Buttons
     draw_button(screen, start_btn_rect, "START", BUTTON_COLOR)
     draw_button(screen, quit_btn_rect, "QUIT", EXIT_COLOR)
 
