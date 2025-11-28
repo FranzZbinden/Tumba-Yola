@@ -4,7 +4,7 @@ import json
 import os
 
 # Boards
-BUTTON_WIDTH, BUTTON_HEIGHT = 50, 50
+BUTTON_WIDTH, BUTTON_HEIGHT = 35, 35
 DIVIDER = 1
 MAGNITUDE = 10
 
@@ -73,16 +73,6 @@ def create_buttons(rows: int, cols: int) -> list:
 def print_matrix(matrix):
     for row in matrix:
         print(' '.join(str(x) for x in row))
-
-# # Generates random activation points inside a matrix
-# def random_activ_matrix(matrix: list, cell_ammount: int):
-#     activated = 0
-#     while activated < cell_ammount:
-#         x_rand = rdm.randint(0,MAGNITUDE-1)
-#         y_rand = rdm.randint(0,MAGNITUDE-1)
-#         if not check_cell_val(matrix, (x_rand,y_rand)):
-#             matrix[x_rand][y_rand] = 1
-#             activated += 1
 
 
 def generate_random_ships(size=10, ships=[5, 4, 3, 3, 2]):
