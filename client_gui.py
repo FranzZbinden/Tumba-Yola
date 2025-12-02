@@ -9,7 +9,9 @@ class ClientGUI:
         # vvvvvvvvvvvvvv  Padding between the two boards (match client expectation: DIVIDER * 3) 
         self.INTER_GRID_PADDING = uc.DIVIDER * 3
 
-        width = max(1000, self.GRID_WIDTH)
+        # Make window width close to grid width (with a small margin), not a fixed large minimum
+        width_margin = 260
+        width = max(400, self.GRID_WIDTH + width_margin)
         height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
 
         self.window = pygame.display.set_mode((width, height))
