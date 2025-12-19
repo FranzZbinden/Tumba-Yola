@@ -12,10 +12,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("TumbaYola - Start Screen")
 clock = pygame.time.Clock()
 
-# Assets
 try:
-    bg_path = os.path.join("sprites", "start_scr_img.png")
-    bg_img = pygame.image.load(bg_path).convert()
+    # Get project root (parent of Utilities folder)
+    project_root = Path(__file__).parent.parent
+    bg_path = project_root / "sprites" / "start_scr_img.png"
+    bg_img = pygame.image.load(str(bg_path)).convert()
     bg_img = pygame.transform.smoothscale(bg_img, (WIDTH, HEIGHT))
 except Exception:
     bg_img = None  # fallback to solid color if image missing
@@ -55,7 +56,6 @@ class InputBox:
                 self.text = self.text[:-1]
             else:
                 ch = event.unicode
-                # Restrict to typical IP characters (digits, dot, colon)
                 if ch.isdigit() or ch in ".:":
                     if len(self.text) < 21:
                         self.text += ch
@@ -108,7 +108,7 @@ while running:
                     print("Please enter a server IP.")
                 else:
                     host = typed.strip()
-                    project_root = Path(__file__).parent
+                    project_root = Path(__file__).parent.parent
                     subprocess.Popen([sys.executable, "client.py", host], cwd=project_root)
                     pygame.quit()
                     sys.exit()

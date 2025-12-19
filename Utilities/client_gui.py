@@ -1,5 +1,5 @@
 import pygame
-import utilities as uc
+from . import utilities as uc
 
 class ClientGUI:
     def __init__(self):

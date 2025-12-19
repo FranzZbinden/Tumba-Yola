@@ -1,8 +1,8 @@
 from socket_ import Socket_
-import utilities as uc
-import client_gui as client_gui
+from Utilities import utilities as uc
+from Utilities import client_gui as client_gui
 import sys
-import end_screen
+from Utilities import end_screen
 
 clientNumber = 0 
 top_matrix = uc.create_matrix() # <<---- TOP BOARD 

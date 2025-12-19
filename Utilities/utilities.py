@@ -1,4 +1,4 @@
-import button as btn
+from . import button as btn
 import random as rdm
 import json
 import os

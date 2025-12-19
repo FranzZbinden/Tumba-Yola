@@ -1,16 +1,12 @@
 import pygame
 import sys
-import button as btn
+from Utilities import button as btn
 
 pygame.init()
 
 WIDTH, HEIGHT = 700, 700
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Matrix of Buttons")
-
-
-# GRAY = (200, 200, 200)
-# BLACK = (0, 0, 0)
 
 BUTTON_WIDTH, BUTTON_HEIGHT = 100, 100
 MAGNITUDE = 5

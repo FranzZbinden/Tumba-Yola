@@ -1,14 +1,15 @@
 Protocol messages
 
-| Purpose                                                   | Type   | Divider | Content                                        | Example message               | Actual string                    |
-|-----------------------------------------------------------|--------|---------|------------------------------------------------|-------------------------------|----------------------------------|
-| Send player name (client -> server)                       | name   | |       | Franz                                          | name|Franz\n                  | "name|Franz\n"                   |
-| Send attack tuple (client -> server)                      | attack | |       | r,c                                            | attack|2,3\n                  | "attack|2,3\n"                   |
-| Immediate success reply (server -> client)                | ack    | |       | ok                                             | ack|ok\n                      | "ack|ok\n"                       |
-| Error reply (server -> client)                            | error  | |       | human-readable text                            | error|It's not your turn\n    | "error|It's not your turn\n"     |
-| Broadcast/Send updated matrix (server -> client)          | matrix | |       | collapsed matrix string (rows ';', cols ',')   | matrix|0,1,0;1,0,0;0,0,0\n    | "matrix|0,1,0;1,0,0;0,0,0\n"     |
-| Optional attack outcome (server -> attacker)              | result | |       | hit|r,c or miss|r,c                            | result|hit|2,3\n              | "result|hit|2,3\n"               |
-| Send initial fleet metadata (server -> client)            | fleet  | |       | JSON: {"ships":[{"cells":[[r,c],...],"start":[r,c],"end":[r,c],"dir":"H|V"},...]} | fleet|{"ships":[{"cells":[[0,1],[0,2]],"start":[0,1],"end":[0,2],"dir":"horizontal"}]}\n | "fleet|{...}\n" |
+| Purpose                                           | Type   | Content                                        | Example message               |
+|---------------------------------------------------|--------|------------------------------------------------|-------------------------------|
+| Send attack tuple (client -> server)              | attack | r,c                                            | attack|2,3\n                  |
+| Welcome/acknowledgement (server -> client)        | ack    | greeting/ok                                    | ack|You are player: 0\n       |
+| Error reply (server -> client)                    | error  | text                                           | error|It's not your turn\n    |
+| Broadcast/Send updated matrix (server -> client)  | matrix | collapsed matrix string (rows ';', cols ',')   | matrix|0,1,0;1,0,0;0,0,0\n    |
+| Attack reply with outcome + updated matrix        | update | hit|r,c|<matrix> or miss|r,c|<matrix>          | update|hit|2,3|...\n          |
+| Send initial fleet data (server -> client)        | fleet  | JSON {"ships":[{"cells":[[r,c],...],...}]}     | fleet|{"ships":[...]}\n       |
+| Victory notification (server -> client)           | win    | text                                           | win|You won\n                 |
+
 
 Notes
 - Newline terminator (\n) is required on every message.

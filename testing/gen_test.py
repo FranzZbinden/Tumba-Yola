@@ -4,7 +4,7 @@ from _thread import *
 
 from dotenv import load_dotenv, dotenv_values
 
-import utilities as uc
+from Utilities import utilities as uc
 
 Matrix1 = uc.create_matrix()
 
