@@ -1,5 +1,6 @@
 import pygame
 from . import utilities as uc
+from pathlib import Path
 
 class ClientGUI:
     def __init__(self):
@@ -19,6 +20,30 @@ class ClientGUI:
         self.clock = pygame.time.Clock()
         pygame.font.init()
         self.font = pygame.font.SysFont(None, 50)
+
+        self._bg_tile = None
+        try:
+            project_root = Path(__file__).parent.parent
+            water_candidates = [
+                project_root / "sprites" / "water.png",
+                project_root / "sprites" / "water.PNG",
+                project_root / "sprites" / "water.jpg",
+                project_root / "sprites" / "water.JPG",
+            ]
+            img = None
+            last_err = None
+            for p in water_candidates:
+                try:
+                    img = pygame.image.load(str(p)).convert()
+                    break
+                except Exception as e:
+                    last_err = e
+            if img is None and last_err is not None:
+                raise last_err
+            tile_size = 32
+            self._bg_tile = pygame.transform.smoothscale(img, (tile_size, tile_size))
+        except Exception:
+            self._bg_tile = None
 
         # Create buttons for both grids vvvvvvvvvvvvvvvvv
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
@@ -49,7 +74,15 @@ class ClientGUI:
     # draw both boards according to their 2d lists and update the window.
     def draw(self, top_matrix: list, bottom_matrix: list) -> None:
         self.clock.tick(15)
-        self.window.fill(uc.WHITE)
+        if self._bg_tile is not None:
+            tw, th = self._bg_tile.get_size()
+            ww, wh = self.window.get_size()
+            # Tile the image across the whole window
+            for y in range(0, wh, th):
+                for x in range(0, ww, tw):
+                    self.window.blit(self._bg_tile, (x, y))
+        else:
+            self.window.fill(uc.OCEAN_BLUE)
         # Labels (Enemy)
         enemy_surf = self.font.render("Enemy", True, uc.BLACK)
         self.window.blit(enemy_surf, (10, 10))
@@ -62,7 +95,8 @@ class ClientGUI:
         for row in self.top_buttons:
             for button in row:
                 r, c = button.index # row, columns
-                button.color = uc.color_for(top_matrix[r][c])
+                cell_val = top_matrix[r][c]
+                button.color = None if cell_val == 0 else uc.color_for(cell_val)
                 button.draw(self.window)
 
         # Draw bottom board
@@ -70,9 +104,26 @@ class ClientGUI:
             for button in row:
                 r, c = button.index
                 cell_val = bottom_matrix[r][c]
-                button.color = uc.color_for(cell_val)
+                # Swap ship sprite to destroyed version when hit
+                if cell_val == 3 and getattr(button, "destroyed_image", None) is not None:
+                    button.image = button.destroyed_image
+                elif cell_val == 1 and getattr(button, "normal_image", None) is not None:
+                    button.image = button.normal_image
+                # If there's a ship sprite on this cell, don't draw a solid color behind it;
+                # let the tiled water background show through the sprite's transparent pixels.
+                if cell_val in (1, 3) and getattr(button, "image", None) is not None:
+                    # Don't paint behind ship sprites (normal or destroyed)
+                    button.color = None
+                else:
+                    # Also avoid painting hit ship cells red; keep background visible
+                    if cell_val == 3:
+                        button.color = None
+                    else:
+                        button.color = None if cell_val == 0 else uc.color_for(cell_val)
                 # If ship cell was hit, remove sprite so red shows through
-                if cell_val == 3 and hasattr(button, "image"):
+                if cell_val == 3 and getattr(button, "destroyed_image", None) is None and hasattr(button, "image"):
+                    # Fallback: if no destroyed sprite is available, remove sprite
+                    # (background stays visible because we avoid painting red)
                     button.image = None
                 button.draw(self.window)
 

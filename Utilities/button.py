@@ -12,7 +12,8 @@ class Button:
         self.image = None
 
     def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
+        if self.color is not None:
+            pygame.draw.rect(surface, self.color, self.rect)
         if self.image is not None:
             surface.blit(self.image, self.rect)
         pygame.draw.rect(surface, Button.BORDER_COLOR, self.rect, 2)

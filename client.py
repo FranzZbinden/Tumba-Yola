@@ -61,7 +61,7 @@ def main():
         events = gui.process_events() # Checks for events, button down or close-game.
         if events["quit"]:
             run = False
-        if events.get("top_click") is not None:
+        if events.get("top_click") is not None and turn == client_id:
             pos_str = uc.make_pos(events["top_click"])
 
             reply = n.send(f"attack|{pos_str}") # message

@@ -12,6 +12,7 @@ MAGNITUDE = 10 # length -> (x,y)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BLUE = (0, 0, 255)
+OCEAN_BLUE = (0, 88, 171)
 RED = (255, 0, 0)
 GREY = (200, 200, 200)
 
@@ -178,8 +179,28 @@ def _load_scaled_image(candidate_paths: list, width: int, height: int):
     last_err = None
     for path in candidate_paths:
         try:
-            img = pygame.image.load(path).convert_alpha()
-            return pygame.transform.smoothscale(img, (width, height))
+            raw = pygame.image.load(path)
+
+            # If the image has an alpha channel, preserve it.
+            # Otherwise, treat the background color (top-left pixel) as transparent (colorkey).
+            has_alpha = raw.get_masks()[3] != 0
+            if has_alpha:
+                img = raw.convert_alpha()
+                return pygame.transform.smoothscale(img, (width, height))
+
+            img = raw.convert()
+            try:
+                key = img.get_at((0, 0))
+                img.set_colorkey(key, pygame.RLEACCEL)
+            except Exception:
+                pass
+
+            scaled = pygame.transform.smoothscale(img, (width, height))
+            try:
+                scaled.set_colorkey(key, pygame.RLEACCEL)
+            except Exception:
+                pass
+            return scaled
         except Exception as e:
             last_err = e
             continue
@@ -194,29 +215,113 @@ def _get_ship_sprites():
 
     # Candidate paths: prefer subfolders; fallback to root-level files
     horiz_start_paths = [
+        os.path.join("sprites", "horizontal", "{[.png"),
+        os.path.join("sprites", "horizontal", "{[.PNG"),
+        os.path.join("sprites", "{[.png"),
+        os.path.join("sprites", "{[.PNG"),
+        # legacy
         os.path.join("sprites", "horizontal", "{[.jpeg"),
         os.path.join("sprites", "{[.jpeg"),
     ]
+    horiz_start_destroyed_paths = [
+        os.path.join("sprites", "horizontal", "{[(destroyed).png"),
+        os.path.join("sprites", "horizontal", "{[(destroyed).PNG"),
+        os.path.join("sprites", "{[(destroyed).png"),
+        os.path.join("sprites", "{[(destroyed).PNG"),
+        # legacy (if present)
+        os.path.join("sprites", "horizontal", "{[(destroyed).jpeg"),
+        os.path.join("sprites", "{[(destroyed).jpeg"),
+    ]
     horiz_mid_paths = [
+        os.path.join("sprites", "horizontal", "l_l_l.png"),
+        os.path.join("sprites", "horizontal", "l_l_l.PNG"),
+        os.path.join("sprites", "l_l_l.png"),
+        os.path.join("sprites", "l_l_l.PNG"),
+        # legacy
         os.path.join("sprites", "horizontal", "l_l_l.jpeg"),
         os.path.join("sprites", "l_l_l.jpeg"),
     ]
+    horiz_mid_destroyed_paths = [
+        os.path.join("sprites", "horizontal", "l_l_l(destroyed).png"),
+        os.path.join("sprites", "horizontal", "l_l_l(destroyed).PNG"),
+        os.path.join("sprites", "l_l_l(destroyed).png"),
+        os.path.join("sprites", "l_l_l(destroyed).PNG"),
+        # legacy
+        os.path.join("sprites", "horizontal", "l_l_l(destroyed).jpeg"),
+        os.path.join("sprites", "l_l_l(destroyed).jpeg"),
+    ]
     horiz_end_paths = [
+        os.path.join("sprites", "horizontal", "]}.png"),
+        os.path.join("sprites", "horizontal", "]}.PNG"),
+        os.path.join("sprites", "]}.png"),
+        os.path.join("sprites", "]}.PNG"),
+        # legacy
         os.path.join("sprites", "horizontal", "]}.jpeg"),
         os.path.join("sprites", "]}.jpeg"),
     ]
+    horiz_end_destroyed_paths = [
+        os.path.join("sprites", "horizontal", "]}(destroyed).png"),
+        os.path.join("sprites", "horizontal", "]}(destroyed).PNG"),
+        os.path.join("sprites", "]}(destroyed).png"),
+        os.path.join("sprites", "]}(destroyed).PNG"),
+        # legacy
+        os.path.join("sprites", "horizontal", "]}(destroyed).jpeg"),
+        os.path.join("sprites", "]}(destroyed).jpeg"),
+    ]
 
     vert_start_paths = [
+        os.path.join("sprites", "vertical", "^.png"),
+        os.path.join("sprites", "vertical", "^.PNG"),
+        os.path.join("sprites", "^.png"),
+        os.path.join("sprites", "^.PNG"),
+        # legacy
         os.path.join("sprites", "vertical", "^.jpeg"),
         os.path.join("sprites", "^.jpeg"),
     ]
+    vert_start_destroyed_paths = [
+        os.path.join("sprites", "vertical", "^(destroyed).png"),
+        os.path.join("sprites", "vertical", "^(destroyed).PNG"),
+        os.path.join("sprites", "^(destroyed).png"),
+        os.path.join("sprites", "^(destroyed).PNG"),
+        # legacy
+        os.path.join("sprites", "vertical", "^(destroyed).jpeg"),
+        os.path.join("sprites", "^(destroyed).jpeg"),
+    ]
     vert_mid_paths = [
+        os.path.join("sprites", "vertical", "lEl.png"),
+        os.path.join("sprites", "vertical", "lEl.PNG"),
+        os.path.join("sprites", "lEl.png"),
+        os.path.join("sprites", "lEl.PNG"),
+        # legacy
         os.path.join("sprites", "vertical", "lEl.jpeg"),
         os.path.join("sprites", "lEl.jpeg"),
     ]
+    vert_mid_destroyed_paths = [
+        os.path.join("sprites", "vertical", "lEl(destroyed).png"),
+        os.path.join("sprites", "vertical", "lEl(destroyed).PNG"),
+        os.path.join("sprites", "lEl(destroyed).png"),
+        os.path.join("sprites", "lEl(destroyed).PNG"),
+        # legacy
+        os.path.join("sprites", "vertical", "lEl(destroyed).jpeg"),
+        os.path.join("sprites", "lEl(destroyed).jpeg"),
+    ]
     vert_end_paths = [
+        os.path.join("sprites", "vertical", "v.png"),
+        os.path.join("sprites", "vertical", "v.PNG"),
+        os.path.join("sprites", "v.png"),
+        os.path.join("sprites", "v.PNG"),
+        # legacy
         os.path.join("sprites", "vertical", "v.jpeg"),
         os.path.join("sprites", "v.jpeg"),
+    ]
+    vert_end_destroyed_paths = [
+        os.path.join("sprites", "vertical", "v(destroyed).png"),
+        os.path.join("sprites", "vertical", "v(destroyed).PNG"),
+        os.path.join("sprites", "v(destroyed).png"),
+        os.path.join("sprites", "v(destroyed).PNG"),
+        # legacy
+        os.path.join("sprites", "vertical", "v(destroyed).jpeg"),
+        os.path.join("sprites", "v(destroyed).jpeg"),
     ]
 
     # makes boat sprites at scale smooth
@@ -225,11 +330,17 @@ def _get_ship_sprites():
             "start": _load_scaled_image(horiz_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
             "mid": _load_scaled_image(horiz_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
             "end": _load_scaled_image(horiz_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "start_destroyed": _load_scaled_image(horiz_start_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "mid_destroyed": _load_scaled_image(horiz_mid_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "end_destroyed": _load_scaled_image(horiz_end_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
         },
         "vertical": {
             "start": _load_scaled_image(vert_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
             "mid": _load_scaled_image(vert_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
             "end": _load_scaled_image(vert_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "start_destroyed": _load_scaled_image(vert_start_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "mid_destroyed": _load_scaled_image(vert_mid_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            "end_destroyed": _load_scaled_image(vert_end_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
         },
     }
     return sprites
@@ -253,6 +364,11 @@ def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
         for b in row:
             if hasattr(b, "image"):
                 b.image = None
+            # Optional: also clear sprite variants
+            if hasattr(b, "normal_image"):
+                b.normal_image = None
+            if hasattr(b, "destroyed_image"):
+                b.destroyed_image = None
 
     ships = fleet.get("ships", [])
     for ship in ships:
@@ -275,10 +391,13 @@ def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
             elif i == n - 1:
                 part = "end"
             img = sprites.get(direction, {}).get(part)
+            destroyed_img = sprites.get(direction, {}).get(f"{part}_destroyed")
             if img is None:
                 continue
             btn = button_grid[r][c]
             if hasattr(btn, "image"):
+                btn.normal_image = img
+                btn.destroyed_image = destroyed_img
                 btn.image = img
 
 
