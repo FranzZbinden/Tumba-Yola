@@ -81,7 +81,6 @@ def draw_button(surf, rect, text, bg_color):
     txt = font_button.render(text, True, TEXT_COLOR)
     surf.blit(txt, (rect.centerx - txt.get_width() // 2, rect.y + (rect.height - txt.get_height()) // 2))
 
-
 # Inline bottom layout configuration
 input_w, input_h = 360, 44
 btn_w, btn_h = 220, 50

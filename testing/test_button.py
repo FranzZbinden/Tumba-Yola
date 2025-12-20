@@ -1,26 +1,26 @@
 import pygame
 import sys
 
-#Initialize PyGame
+# Initialize PyGame
 pygame.init()
 
-#Screen dimensions
+# Screen dimensions
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("PyGame Button Example")
 
-#Colors
+# Colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
 BLUE = (0, 0, 255)
 
-#Button properties
+# Button properties
 button_rect = pygame.Rect(300, 250, 200, 50)  # x, y, width, height
 font = pygame.font.Font(None, 36)
 button_text = font.render("Click Me!", True, WHITE)
 
-#Main loop
+# Main loop
 running = True
 while running:
     screen.fill(GRAY)

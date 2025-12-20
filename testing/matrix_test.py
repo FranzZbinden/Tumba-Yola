@@ -1,5 +1,7 @@
-# A file for representing the board of the game as a 2d list with some test functions
 import random 
+
+# A file for representing the board of the game as a 2d list with some test functions
+
 # version 1 (for visualization)
 # A = [0,0,0,0,0,0,0,0,0,0]
 # B = [0,0,0,0,0,0,0,0,0,0]
@@ -52,7 +54,7 @@ def generate_randomships(size=10, ships=[5, 4, 3, 3, 2]):
 
     return matrix
 
-# version 3 (the better one (to use))
+# version 3 (the better one (testing))
 matrix = [[0]*10 for _ in range(10)]
 
 #test function to print the matrix nicely

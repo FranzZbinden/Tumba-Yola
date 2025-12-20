@@ -6,7 +6,7 @@ from Utilities import end_screen
 
 clientNumber = 0 
 top_matrix = uc.create_matrix() # <<---- TOP BOARD 
-bottom_matrix = uc.create_matrix() # <<---- botton BOARD 
+bottom_matrix = uc.create_matrix() # <<---- Botton BOARD 
 
 def main():
     global top_matrix, bottom_matrix
@@ -28,7 +28,7 @@ def main():
                 fleet_json = maybe_fleet
                 uc.procces_boats_sprites(None, fleet_json, gui.bottom_buttons)
 
-        # Check for win notification from server
+        # Check for win - from server
         win_msg = n.get_win()
         if win_msg:
             end_screen.show_end_screen("You won")
@@ -37,7 +37,7 @@ def main():
         updated_str_matrix = n.get_matrix() # recives self updated matrix
         if updated_str_matrix:
             bottom_matrix = uc.string_to_matrix(updated_str_matrix) # converts to 2d list
-            # Detect loss: all ship cells have been hit
+            # Detect loss (all ship cells have been hit)
             hits = sum(1 for row in bottom_matrix for v in row if v == 3)
             if hits >= TOTAL_SHIP_CELLS:
                 end_screen.show_end_screen("You Lose")
@@ -49,7 +49,7 @@ def main():
         if events.get("top_click") is not None:
             pos_str = uc.make_pos(events["top_click"])
             reply = n.send(f"attack|{pos_str}")
-            # Expect single-line response: update|hit|r,c|<matrix> or update|miss|r,c|<matrix>
+            # Expect single-line response
             if reply and reply.startswith("update|"):
                 _, outcome, coord, _matrix_str = reply.split("|", 3)
                 r_str, c_str = coord.split(",")
