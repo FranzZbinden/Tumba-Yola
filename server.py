@@ -39,10 +39,10 @@ def send_matrix(conn, matrix):
 
 def threaded_client(conn, player):
     global current_turn     
-    
-    # Add this client to the clients list
+
     clients.append(conn)
     conn_to_player[conn] = player
+    broadcast_turn()
 
     # Send a welcome/ack line
     conn.sendall(f"ack|You are player: {player}\n".encode("utf-8"))
@@ -85,18 +85,16 @@ def threaded_client(conn, player):
                         continue
 
                     with lock:
-                        if player == current_turn:
                             try:
                                 # Update ONLY the opponent's matrix
                                 opponent = 1 - player
-                                new_val = uc.apply_attack_to_cell(matrices[opponent], pos)  # 2 (miss, blue) or 3 (hit, red)
+                                new_val = uc.apply_attack_to_cell(matrices[opponent], pos)  # 2 (miss -> blue) or 3 (hit -> red)
                                 print(f"Player {player} pressed {pos}")
                                 current_turn = 1 - current_turn  # Change turn
+                                broadcast_turn()
 
-                                # Single-line response to attacker with outcome and updated opponent matrix
                                 outcome = "hit" if new_val == 3 else "miss"
-                                matrix_str = uc.matrix_to_string(matrices[opponent])
-                                conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}|{matrix_str}\n".encode("utf-8"))
+                                conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}\n".encode("utf-8"))
 
                                 # Track hits and check winner
                                 if new_val == 3:
@@ -111,8 +109,7 @@ def threaded_client(conn, player):
                                         break
                             except ValueError as e:
                                 conn.sendall(f"error|{e}\n".encode("utf-8"))
-                        else:
-                            conn.sendall(b"error|It's not your turn\n")
+                        
 
                 elif t == "name":
                     # Optionally store/display name; acknowledge for now
@@ -132,6 +129,14 @@ def threaded_client(conn, player):
     print(f"Connection lost with {player}")
     conn.close()
 
+def broadcast_turn():
+    msg = f"turn|{current_turn}\n".encode("utf-8")
+    for c in clients:
+        try:
+            c.sendall(msg)
+        except:
+            pass
+
 # main loop 
 currentPlayer = 0
 while True:
@@ -141,3 +146,4 @@ while True:
 
     start_new_thread(threaded_client, (conn, currentPlayer))
     currentPlayer += 1
+

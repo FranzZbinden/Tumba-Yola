@@ -4,8 +4,7 @@ from Utilities import client_gui as client_gui
 import sys
 from Utilities import end_screen
 
-clientNumber = 0 
-top_matrix = uc.create_matrix() # <<---- TOP BOARD 
+top_matrix = uc.create_matrix() # <<---- Top BOARD 
 bottom_matrix = uc.create_matrix() # <<---- Botton BOARD 
 
 def main():
@@ -16,11 +15,27 @@ def main():
         sys.exit(1)
     server_ip = sys.argv[1].strip()
     n = Socket_(server_ip)
+    client_id = n.player_id
+
+    if client_id is None:
+        print("Failed to connect to server (no player_id received)")
+        sys.exit(1)
+
+    turn = n.get_turn()
+
     gui = client_gui.ClientGUI()
     fleet_json = None
     TOTAL_SHIP_CELLS = 18
 
     while run: 
+        new_turn = n.get_turn()
+        if new_turn is not None:
+            turn = new_turn
+        if turn == client_id:
+            print("Is your turn")
+        else:
+            print("Is not your turn")
+        
         # Try to capture initial fleet payload once and assign sprites into buttons
         if fleet_json is None:
             maybe_fleet = n.get_fleet()
@@ -48,10 +63,13 @@ def main():
             run = False
         if events.get("top_click") is not None:
             pos_str = uc.make_pos(events["top_click"])
-            reply = n.send(f"attack|{pos_str}")
+
+            reply = n.send(f"attack|{pos_str}") # message
+
             # Expect single-line response
             if reply and reply.startswith("update|"):
-                _, outcome, coord, _matrix_str = reply.split("|", 3)
+                # Server replies: update|hit/miss|r,c
+                _, outcome, coord = reply.split("|", 2)
                 r_str, c_str = coord.split(",")
                 r, c = int(r_str), int(c_str)
                 top_matrix[r][c] = 3 if outcome == "hit" else 2

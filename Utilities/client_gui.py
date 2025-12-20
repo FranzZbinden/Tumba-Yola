@@ -48,7 +48,7 @@ class ClientGUI:
 
     # draw both boards according to their 2d lists and update the window.
     def draw(self, top_matrix: list, bottom_matrix: list) -> None:
-        self.clock.tick(60)
+        self.clock.tick(15)
         self.window.fill(uc.WHITE)
         # Labels (Enemy)
         enemy_surf = self.font.render("Enemy", True, uc.BLACK)

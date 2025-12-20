@@ -9,6 +9,7 @@ Protocol messages
 | Attack reply with outcome + updated matrix        | update | hit|r,c|<matrix> or miss|r,c|<matrix>          | update|hit|2,3|...\n          |
 | Send initial fleet data (server -> client)        | fleet  | JSON {"ships":[{"cells":[[r,c],...],...}]}     | fleet|{"ships":[...]}\n       |
 | Victory notification (server -> client)           | win    | text                                           | win|You won\n                 |
+| turn for attack                                   | int    | 0 or 1                                         | turn|0\n                      |
 
 
 Notes
