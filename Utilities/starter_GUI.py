@@ -15,7 +15,7 @@ clock = pygame.time.Clock()
 try:
     # Get project root (parent of Utilities folder)
     project_root = Path(__file__).parent.parent
-    bg_path = project_root / "sprites" / "start_scr_img.png"
+    bg_path = project_root / "source_files" / "sprites" / "start_scr_img.png"
     bg_img = pygame.image.load(str(bg_path)).convert()
     bg_img = pygame.transform.smoothscale(bg_img, (WIDTH, HEIGHT))
 except Exception:

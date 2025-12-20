@@ -1,4 +1,4 @@
-import pygame
+import pygame, sys, time
 from . import utilities as uc
 from pathlib import Path
 
@@ -27,10 +27,10 @@ class ClientGUI:
         try:
             project_root = Path(__file__).parent.parent
             water_candidates = [
-                project_root / "sprites" / "water.png",
-                project_root / "sprites" / "water.PNG",
-                project_root / "sprites" / "water.jpg",
-                project_root / "sprites" / "water.JPG",
+                project_root / "source_files" / "sprites" / "water.png",
+                project_root / "source_files" / "sprites" / "water.PNG",
+                project_root / "source_files" / "sprites" / "water.jpg",
+                project_root / "source_files" / "sprites" / "water.JPG",
             ]
             img = None
             last_err = None
@@ -50,7 +50,7 @@ class ClientGUI:
         # Miss marker sprite for top board
         try:
             project_root = Path(__file__).parent.parent
-            miss_path = project_root / "sprites" / "pool_float_orange.PNG"
+            miss_path = project_root / "source_files" / "sprites" / "pool_float_orange.PNG"
             miss_img = pygame.image.load(str(miss_path)).convert_alpha()
             self._miss_sprite = pygame.transform.smoothscale(miss_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
         except Exception:
@@ -59,7 +59,7 @@ class ClientGUI:
         # Hit marker sprite for top board
         try:
             project_root = Path(__file__).parent.parent
-            hit_path = project_root / "sprites" / "pool_float_red.PNG"
+            hit_path = project_root / "source_files" / "sprites" / "pool_float_red.PNG"
             hit_img = pygame.image.load(str(hit_path)).convert_alpha()
             self._hit_sprite = pygame.transform.smoothscale(hit_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
         except Exception:
@@ -171,6 +171,22 @@ class ClientGUI:
                 button.draw(self.window)
 
         pygame.display.flip()
+
+    # def music(repeat: int, music_path):
+    #     pygame.mixer.init()
+    #     pygame.mixer.music.load(music_path) #"source_files/sprites/Audio/pirate_7.mp3"
+    #     pygame.mixer.music.unload()
+    #     pygame.mixer.music.play(loops=repeat, start=10, fade_ms=2000)
+    #     pygame.mixer.music.rewind()
+
+    #     pygame.mixer.music.stop()
+    #     pygame.mixer.music.pause()
+    #     pygame.mixer.music.unpause()
+
+    #     pygame.mixer.music.fadeout(1000)
+
+    #     pygame.mixer.music.get_volume()
+    #     pygame.mixer.music.set_volume(0.5)
 
     def shutdown(self) -> None:
         pygame.quit()
