@@ -22,6 +22,8 @@ class ClientGUI:
         self.font = pygame.font.SysFont(None, 50)
 
         self._bg_tile = None
+        self._miss_sprite = None
+        self._hit_sprite = None
         try:
             project_root = Path(__file__).parent.parent
             water_candidates = [
@@ -44,6 +46,24 @@ class ClientGUI:
             self._bg_tile = pygame.transform.smoothscale(img, (tile_size, tile_size))
         except Exception:
             self._bg_tile = None
+
+        # Miss marker sprite for top board
+        try:
+            project_root = Path(__file__).parent.parent
+            miss_path = project_root / "sprites" / "pool_float_orange.PNG"
+            miss_img = pygame.image.load(str(miss_path)).convert_alpha()
+            self._miss_sprite = pygame.transform.smoothscale(miss_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
+        except Exception:
+            self._miss_sprite = None
+
+        # Hit marker sprite for top board
+        try:
+            project_root = Path(__file__).parent.parent
+            hit_path = project_root / "sprites" / "pool_float_red.PNG"
+            hit_img = pygame.image.load(str(hit_path)).convert_alpha()
+            self._hit_sprite = pygame.transform.smoothscale(hit_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
+        except Exception:
+            self._hit_sprite = None
 
         # Create buttons for both grids vvvvvvvvvvvvvvvvv
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
@@ -96,7 +116,19 @@ class ClientGUI:
             for button in row:
                 r, c = button.index # row, columns
                 cell_val = top_matrix[r][c]
-                button.color = None if cell_val == 0 else uc.color_for(cell_val)
+                # Miss marker on enemy board
+                if cell_val == 2 and self._miss_sprite is not None:
+                    button.image = self._miss_sprite
+                    button.color = None
+                # Hit marker on enemy board
+                elif cell_val == 3 and self._hit_sprite is not None:
+                    button.image = self._hit_sprite
+                    button.color = None
+                else:
+                    # Clear markers if cell changed
+                    if getattr(button, "image", None) in (self._miss_sprite, self._hit_sprite):
+                        button.image = None
+                    button.color = None if cell_val == 0 else uc.color_for(cell_val)
                 button.draw(self.window)
 
         # Draw bottom board
@@ -104,11 +136,22 @@ class ClientGUI:
             for button in row:
                 r, c = button.index
                 cell_val = bottom_matrix[r][c]
+                # Miss marker on your board (opponent missed)
+                if cell_val == 2 and self._miss_sprite is not None:
+                    button.image = self._miss_sprite
+                    button.color = None
+                    button.draw(self.window)
+                    continue
+
                 # Swap ship sprite to destroyed version when hit
                 if cell_val == 3 and getattr(button, "destroyed_image", None) is not None:
                     button.image = button.destroyed_image
                 elif cell_val == 1 and getattr(button, "normal_image", None) is not None:
                     button.image = button.normal_image
+                else:
+                    # Clear miss marker if cell changed away from miss
+                    if getattr(button, "image", None) is self._miss_sprite:
+                        button.image = None
                 # If there's a ship sprite on this cell, don't draw a solid color behind it;
                 # let the tiled water background show through the sprite's transparent pixels.
                 if cell_val in (1, 3) and getattr(button, "image", None) is not None:
