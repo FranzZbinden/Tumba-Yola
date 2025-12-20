@@ -3,10 +3,10 @@ import random as rdm
 import json
 import os
 
-# Boards
+# Boards data
 BUTTON_WIDTH, BUTTON_HEIGHT = 35, 35
-DIVIDER = 1
-MAGNITUDE = 10
+DIVIDER = 1 # space between
+MAGNITUDE = 10 # length -> (x,y)
 
 # Colors
 BLACK = (0, 0, 0)
@@ -15,11 +15,11 @@ BLUE = (0, 0, 255)
 RED = (255, 0, 0)
 GREY = (200, 200, 200)
 
-
+# Uses defauld magnitude set above
 def create_matrix() -> list: 
     return [[0]*MAGNITUDE for _ in range(MAGNITUDE)]
 
-# From collapsed string to 2d List
+# From collapsed string -> 2d List
 def string_to_matrix(s: str) -> list:
     return [list(map(int, row.split(','))) for row in s.split(';')]
 
@@ -31,19 +31,18 @@ def matrix_to_string(matrix: list) -> str:
 def make_pos(tup):
     return str(tup[0]) + "," + str(tup[1])
 
-# Handle matrix, Returns True if given cell == 1
+
 def check_cell_val(matrix: list, position: tuple) -> bool: # (helper)
     return matrix[position[0]][position[1]] == 1
 
-
+# Takes a matrix & position(tuple(x,y)) and activate cell (for testing, unused)
 def assign_activation_to_cell(matrix: list, position: tuple):
     if check_cell_val(matrix, position):
         raise ValueError(f"Cell at {position} is already occupied.")
-        # TO-DO (handle error correctly)
     else:
         matrix[position[0]][position[1]] = 1
 
-
+# Assign a digit based on the status of cell being attacked 
 def apply_attack_to_cell(matrix: list, position: tuple) -> int:
     row, col = position
     current = matrix[row][col]
@@ -53,7 +52,7 @@ def apply_attack_to_cell(matrix: list, position: tuple) -> int:
     if current == 1:
         matrix[row][col] = 3
         return 3
-    if current in (2, 3):
+    if current in (2, 3):   # already attacked
         raise ValueError(f"Cell at {position} already attacked.")
     raise ValueError(f"Invalid cell value {current} at {position}.")
 
@@ -69,50 +68,7 @@ def create_buttons(rows: int, cols: int) -> list:
         buttons.append(row)
     return buttons
 
-# Function to print the matrix nicely
-def print_matrix(matrix):
-    for row in matrix:
-        print(' '.join(str(x) for x in row))
-
-
-def generate_random_ships(size=10, ships=[5, 4, 3, 3, 2]):
-    # Initialize matrix
-    matrix = [[0 for _ in range(size)] for _ in range(size)]
-
-    for ship_len in ships:
-        placed = False
-        while not placed:
-            orientation = rdm.choice(['H', 'V'])
-            if orientation == 'H':
-                row = rdm.randint(0, size - 1)
-                col = rdm.randint(0, size - ship_len)
-                # Check if the cells are free
-                if all(matrix[row][col + i] == 0 for i in range(ship_len)):
-                    for i in range(ship_len):
-                        matrix[row][col + i] = 1
-                    placed = True
-            else:  # Vertical
-                row = rdm.randint(0, size - ship_len)
-                col = rdm.randint(0, size - 1)
-                if all(matrix[row + i][col] == 0 for i in range(ship_len)):
-                    for i in range(ship_len):
-                        matrix[row + i][col] = 1
-                    placed = True
-
-    return matrix
-
-#    Create a dictionary with keys: (row, col)
-#    Values of each keys are boolean
-def create_cell_state_map(size: int = MAGNITUDE) -> dict:
-    return {(row, col): False for row in range(size) for col in range(size)}
-
-#    Set the given (row, col) key in the hash -> True
-def set_cell_attacked(cell_state_map: dict, position: tuple) -> None:
-    if position not in cell_state_map:
-        raise KeyError(f"Invalid cell position: {position}")
-    cell_state_map[position] = True
-
-
+# Returns color based on value 
 def color_for(value: int):
     if value == 0:
         return WHITE
@@ -123,7 +79,6 @@ def color_for(value: int):
     if value == 3:
         return RED
     return GREY
-
 
 # checks for events, button down or close-game.
 def process_top_click_events(top_buttons) -> dict:
@@ -143,8 +98,6 @@ def process_top_click_events(top_buttons) -> dict:
                 if top_click is not None:
                     break
     return {"quit": quit_flag, "top_click": top_click}
-
-
 
 # Places multiple ships on the board.
 # Returns a list of ship dictionaries.
@@ -189,6 +142,7 @@ def place_ship_randomly(board, length):
                 "dir": "horizontal" if orientation == "H" else "vertical"
             }
 
+# prints on terminal formated fleet
 def print_fleet(list_example):
     print("\n=== SHIPS IN BOARD ===")
 
@@ -201,8 +155,7 @@ def print_fleet(list_example):
         for c in ship["coords"]:
             print(f"{c}")
 
-
-# Convert generate_fleet return (list of ship dicts) to a compact JSON
+# Convert generate_fleet to a compact JSON
 # with integer coords, suitable for sending over the socket in one line.
 def normalize_fleet_for_wire(fleet_obj: list) -> str:
     ships_out = []
@@ -218,9 +171,8 @@ def normalize_fleet_for_wire(fleet_obj: list) -> str:
     payload = {"ships": ships_out}
     return json.dumps(payload, separators=(",", ":"))
 
-# ---------- Sprites rendering helpers ------------------
 
-# scale down the image and smooth it
+# Scales down the image and smooth it
 def _load_scaled_image(candidate_paths: list, width: int, height: int):
     import pygame  # local import to avoid GUI dependency on server
     last_err = None
@@ -267,7 +219,7 @@ def _get_ship_sprites():
         os.path.join("sprites", "v.jpeg"),
     ]
 
-    # makes losts of boat sprites at scale smooth
+    # makes boat sprites at scale smooth
     sprites = {
         "horizontal": {
             "start": _load_scaled_image(horiz_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
