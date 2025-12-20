@@ -15,7 +15,7 @@ class Socket_:
 
 
     def connect(self):
-        try:        # TO VERIFY LATER, temporary
+        try:        
             print(f"Attempting to connect to {self.addr} ...")
             self.client.settimeout(5)
             self.client.connect(self.addr)
@@ -30,6 +30,7 @@ class Socket_:
             print(f"Connection failed: {e}")
             return None
 
+
     def _recv_line(self):
         while True:
             i = self._buf.find(b"\n")
@@ -41,6 +42,7 @@ class Socket_:
             if not chunk:
                 return None
             self._buf.extend(chunk)
+
 
     def get_matrix(self) -> str | None:
         try:
@@ -91,11 +93,9 @@ class Socket_:
             print(e)
             return None
 
+    # Non-blocking retrieval of fleet JSON payload if available.
+    # Returns cached payload once, then clears it.
     def get_fleet(self) -> str | None:
-        """
-        Non-blocking retrieval of fleet JSON payload if available.
-        Returns cached payload once, then clears it.
-        """
         if self._last_fleet_json is not None:
             payload = self._last_fleet_json
             self._last_fleet_json = None
@@ -127,7 +127,6 @@ class Socket_:
             return None
         finally:
             self.client.setblocking(True)
-
 
         # Non-blocking retrieval of a win notification line if available.
         # Returns the payload after 'win|' once, otherwise None.

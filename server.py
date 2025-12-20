@@ -28,7 +28,7 @@ lock = threading.Lock()
 clients = []                          # Store all connected clients
 conn_to_player = {}                   # Map each connection to its player id
 hit_counts = {0: 0, 1: 0}             # Successful hits per player (attacks landed on opponent)
-TOTAL_SHIP_CELLS = 18                 # 3 + 4 + 5 + 6
+TOTAL_SHIP_CELLS = 18                 
 
 def send_matrix(conn, matrix):
     try:
@@ -38,7 +38,7 @@ def send_matrix(conn, matrix):
         pass
 
 def threaded_client(conn, player):
-    global current_turn     # Modify var in global scope
+    global current_turn     
     
     # Add this client to the clients list
     clients.append(conn)
@@ -132,7 +132,7 @@ def threaded_client(conn, player):
     print(f"Connection lost with {player}")
     conn.close()
 
-# main loop for finding clients
+# main loop 
 currentPlayer = 0
 while True:
     print("waiting for players")
