@@ -7,7 +7,7 @@ from pathlib import Path
 pygame.init()
 
 # Window
-WIDTH, HEIGHT = 1200, 800
+WIDTH, HEIGHT = 960, 640
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("TumbaYola - Start Screen")
 clock = pygame.time.Clock()

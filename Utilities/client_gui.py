@@ -1,6 +1,7 @@
 import pygame, sys, time
 from . import utilities as uc
 from pathlib import Path
+import math
 
 class ClientGUI:
     def __init__(self):
@@ -24,6 +25,11 @@ class ClientGUI:
         self._bg_tile = None
         self._miss_sprite = None
         self._hit_sprite = None
+        self._enemy_icon = None
+        self._you_icon = None
+        self._icon_size = (125, 125)  
+        self._icon_amp = 6            # pixels (small movement)
+        self._icon_speed = 0.45       
         try:
             project_root = Path(__file__).parent.parent
             water_candidates = [
@@ -65,6 +71,25 @@ class ClientGUI:
         except Exception:
             self._hit_sprite = None
 
+        # Pelican icons (with coconut)
+        try:
+            project_root = Path(__file__).parent.parent
+            enemy_path_coco = project_root / "source_files" / "sprites" / "pelican_right_coco.png"
+            img = pygame.image.load(str(enemy_path_coco)).convert_alpha()
+            self._enemy_icon = pygame.transform.smoothscale(img, self._icon_size)
+        except Exception:
+            self._enemy_icon = None
+
+        try:
+            project_root = Path(__file__).parent.parent
+            you_path_coco = project_root / "source_files" / "sprites" / "pelican_left_coco.png"
+            img = pygame.image.load(str(you_path_coco)).convert_alpha()
+            self._you_icon = pygame.transform.smoothscale(img, self._icon_size)
+        except Exception:
+            self._you_icon = None
+
+
+
         # Create buttons for both grids vvvvvvvvvvvvvvvvv
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
         self.bottom_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
@@ -103,13 +128,20 @@ class ClientGUI:
                     self.window.blit(self._bg_tile, (x, y))
         else:
             self.window.fill(uc.OCEAN_BLUE)
-        # Labels (Enemy)
-        enemy_surf = self.font.render("Enemy", True, uc.BLACK)
-        self.window.blit(enemy_surf, (10, 10))
-        # Label (You) at bottom-right
-        you_surf = self.font.render("You", True, uc.BLACK)
-        self.window.blit(you_surf, (self.window.get_width() - you_surf.get_width() - 10,
-                                     self.window.get_height() - you_surf.get_height() - 10))
+        # Pelican icons (Enemy/You)
+        #   x = A * sin(wt)
+        #   y = A * sin(wt) * cos(wt) = (A/2) * sin(2wt)
+        t = pygame.time.get_ticks() / 1000.0
+        w = 2 * math.pi * self._icon_speed
+        dx = int(self._icon_amp * math.sin(w * t))
+        dy = int((self._icon_amp / 2) * math.sin(2 * w * t))
+        edge_pad = 0
+        if self._enemy_icon is not None:
+            self.window.blit(self._enemy_icon, (edge_pad + dx, edge_pad + dy))
+        if self._you_icon is not None:
+            ww, wh = self.window.get_size()
+            self.window.blit(self._you_icon, (ww - self._you_icon.get_width() - edge_pad - dx,
+                                              wh - self._you_icon.get_height() - edge_pad - dy))
 
         # Draw top board
         for row in self.top_buttons:

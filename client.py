@@ -5,7 +5,7 @@ import sys
 from Utilities import end_screen
 import pygame as p
 
-top_matrix = uc.create_matrix() # <<---- Top BOARD 
+top_matrix = uc.create_matrix()    # <<---- Top BOARD 
 bottom_matrix = uc.create_matrix() # <<---- Botton BOARD 
 
 def main():
