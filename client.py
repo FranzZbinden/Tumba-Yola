@@ -4,6 +4,7 @@ from Utilities import client_gui as client_gui
 import sys
 from Utilities import end_screen
 import pygame as p
+from pathlib import Path
 
 top_matrix = uc.create_matrix()    # <<---- Top BOARD 
 bottom_matrix = uc.create_matrix() # <<---- Botton BOARD 
@@ -30,11 +31,13 @@ def main():
     TOTAL_SHIP_CELLS = 18
     
     p.mixer.init()
-    p.mixer.music.load(uc.MUSIC) #"source_files/sprites/Audio/pirate_7.mp3"
+    audio_dir = Path(__file__).parent / "source_files" / "sprites" / "Audio"
+    # Cross-platform paths (works on macOS/Windows/Linux)
+    p.mixer.music.load(str(audio_dir / "pirate_7.mp3"))
     p.mixer.music.play(loops=10, start=10, fade_ms=2000)
 
-    miss_sfx = p.mixer.Sound("source_files\sprites\Audio\miss.mp3")
-    hit_sfx = p.mixer.Sound("source_files\sprites\Audio\crash.mp3")
+    miss_sfx = p.mixer.Sound(str(audio_dir / "miss.mp3"))
+    hit_sfx = p.mixer.Sound(str(audio_dir / "crash.mp3"))
 
     while run: 
         new_turn = n.get_turn()
