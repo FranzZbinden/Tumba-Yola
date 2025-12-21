@@ -29,6 +29,14 @@ clients = []                          # Store all connected clients
 conn_to_player = {}                   # Map each connection to its player id
 hit_counts = {0: 0, 1: 0}             # Successful hits per player (attacks landed on opponent)
 TOTAL_SHIP_CELLS = 18                 
+free_players = [0, 1]                 # Available player slots (reuse on reconnect)
+
+
+def reset_game_state():
+    global matrices, fleets, current_turn, hit_counts
+    matrices, fleets = uc.init_matrices_and_fleets()
+    current_turn = 0
+    hit_counts = {0: 0, 1: 0}
 
 def send_matrix(conn, matrix):
     try:
@@ -40,8 +48,10 @@ def send_matrix(conn, matrix):
 def threaded_client(conn, player):
     global current_turn     
 
-    clients.append(conn)
-    conn_to_player[conn] = player
+    # Register connection
+    with lock:
+        clients.append(conn)
+        conn_to_player[conn] = player
     broadcast_turn()
 
     # Send a welcome/ack line
@@ -84,6 +94,7 @@ def threaded_client(conn, player):
                         conn.sendall(b"error|Invalid Coordinates\n")
                         continue
 
+                    broadcast_needed = False
                     with lock:
                             try:
                                 # Update ONLY the opponent's matrix
@@ -91,7 +102,7 @@ def threaded_client(conn, player):
                                 new_val = uc.apply_attack_to_cell(matrices[opponent], pos)  # 2 (miss -> blue) or 3 (hit -> red)
                                 print(f"Player {player} pressed {pos}")
                                 current_turn = 1 - current_turn  # Change turn
-                                broadcast_turn()
+                                broadcast_needed = True
 
                                 outcome = "hit" if new_val == 3 else "miss"
                                 conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}\n".encode("utf-8"))
@@ -109,7 +120,11 @@ def threaded_client(conn, player):
                                         break
                             except ValueError as e:
                                 conn.sendall(f"error|{e}\n".encode("utf-8"))
-                        
+
+                    # broadcast outside the lock to avoid deadlocking (broadcast_turn uses the same lock)
+                    if broadcast_needed:
+                        broadcast_turn()
+
 
                 elif t == "name":
                     # Optionally store/display name; acknowledge for now
@@ -121,29 +136,51 @@ def threaded_client(conn, player):
         except:
             break
 
-    if conn in clients:
-        clients.remove(conn)
-    if conn in conn_to_player:
-        del conn_to_player[conn]
+    with lock:
+        if conn in clients:
+            clients.remove(conn)
+        if conn in conn_to_player:
+            del conn_to_player[conn]
+        if player not in free_players and player in (0, 1):
+            free_players.append(player)
+        # If everyone disconnected, reset state for next game
+        if len(clients) == 0:
+            free_players[:] = [0, 1]
+            reset_game_state()
     
     print(f"Connection lost with {player}")
     conn.close()
 
 def broadcast_turn():
-    msg = f"turn|{current_turn}\n".encode("utf-8")
-    for c in clients:
+    # Snapshot to avoid holding lock during network I/O
+    with lock:
+        msg = f"turn|{current_turn}\n".encode("utf-8")
+        targets = list(clients)
+    for c in targets:
         try:
             c.sendall(msg)
         except:
             pass
 
-# main loop 
-currentPlayer = 0
+# main loop
 while True:
     print("waiting for players")
     conn, addr = s.accept() # blocks until recives client connection
     print("Connected to:", addr)
 
-    start_new_thread(threaded_client, (conn, currentPlayer))
-    currentPlayer += 1
+    # Assign an available slot (0/1). If full, reject connection.
+    with lock:
+        if free_players:
+            player_id = free_players.pop(0)
+        else:
+            player_id = None
+    if player_id is None:
+        try:
+            conn.sendall(b"error|Server full (2 players max)\n")
+        except:
+            pass
+        conn.close()
+        continue
+
+    start_new_thread(threaded_client, (conn, player_id))
 
