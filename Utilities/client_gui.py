@@ -174,7 +174,7 @@ class ClientGUI:
 
     # def music(repeat: int, music_path):
     #     pygame.mixer.init()
-    #     pygame.mixer.music.load(music_path) #"source_files/sprites/Audio/pirate_7.mp3"
+    #     pygame.mixer.music.load(music_path) 
     #     pygame.mixer.music.unload()
     #     pygame.mixer.music.play(loops=repeat, start=10, fade_ms=2000)
     #     pygame.mixer.music.rewind()

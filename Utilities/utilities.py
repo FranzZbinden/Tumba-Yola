@@ -7,6 +7,7 @@ import os
 BUTTON_WIDTH, BUTTON_HEIGHT = 35, 35
 DIVIDER = 1 # space between
 MAGNITUDE = 10 # length -> (x,y)
+MUSIC ="source_files/sprites/Audio/pirate_7.mp3"
 
 # Colors
 BLACK = (0, 0, 0)
@@ -426,3 +427,12 @@ def init_matrices_and_fleets():
         matrices[pid] = matrix
         fleets[pid] = fleet
     return matrices, fleets
+
+
+#  Return the NEW value of the first cell that changed, or None if no change.
+def first_changed_value(old_m: list, new_m: list) -> int | None:
+    for r in range(len(new_m)):
+        for c in range(len(new_m[r])):
+            if old_m[r][c] != new_m[r][c]:
+                return new_m[r][c]
+    return None

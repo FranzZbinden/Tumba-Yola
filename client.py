@@ -3,6 +3,7 @@ from Utilities import utilities as uc
 from Utilities import client_gui as client_gui
 import sys
 from Utilities import end_screen
+import pygame as p
 
 top_matrix = uc.create_matrix() # <<---- Top BOARD 
 bottom_matrix = uc.create_matrix() # <<---- Botton BOARD 
@@ -25,7 +26,15 @@ def main():
 
     gui = client_gui.ClientGUI()
     fleet_json = None
+    prep_game_status = True
     TOTAL_SHIP_CELLS = 18
+    
+    p.mixer.init()
+    p.mixer.music.load(uc.MUSIC) #"source_files/sprites/Audio/pirate_7.mp3"
+    p.mixer.music.play(loops=10, start=10, fade_ms=2000)
+
+    miss_sfx = p.mixer.Sound("source_files\sprites\Audio\miss.mp3")
+    hit_sfx = p.mixer.Sound("source_files\sprites\Audio\crash.mp3")
 
     while run: 
         new_turn = n.get_turn()
@@ -51,10 +60,16 @@ def main():
 
         updated_str_matrix = n.get_matrix() # recives self updated matrix
         if updated_str_matrix:
+            new_bottom = uc.string_to_matrix(updated_str_matrix)
+            if uc.first_changed_value(bottom_matrix,new_bottom) == 2 and prep_game_status == False:
+                miss_sfx.play()
+            elif uc.first_changed_value(bottom_matrix,new_bottom) == 3 and prep_game_status == False:
+                hit_sfx.play()
             bottom_matrix = uc.string_to_matrix(updated_str_matrix) # converts to 2d list
             # Detect loss (all ship cells have been hit)
             hits = sum(1 for row in bottom_matrix for v in row if v == 3)
             if hits >= TOTAL_SHIP_CELLS:
+                p.mixer.music.fadeout(2500)
                 end_screen.show_end_screen("You Lose")
                 break
 
@@ -72,8 +87,16 @@ def main():
                 _, outcome, coord = reply.split("|", 2)
                 r_str, c_str = coord.split(",")
                 r, c = int(r_str), int(c_str)
-                top_matrix[r][c] = 3 if outcome == "hit" else 2
+                if outcome == "hit":
+                    top_matrix[r][c] = 3
+                    hit_sfx.play()
+                else:
+                    top_matrix[r][c] = 2
+                    miss_sfx.play()
+
 
         gui.draw(top_matrix, bottom_matrix)
+        prep_game_status = False
+    p.mixer.music.stop()
     gui.shutdown()
 main()
