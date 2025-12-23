@@ -2,11 +2,10 @@ import socket
 from _thread import *
 import threading
 import sys
-from dotenv import load_dotenv, dotenv_values
 from Utilities import utilities as uc
+from Utilities import server_utilities as ucs
 
-load_dotenv()
-server = uc.get_local_ip()
+server = ucs.get_local_ip()
 port = 5555     
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
