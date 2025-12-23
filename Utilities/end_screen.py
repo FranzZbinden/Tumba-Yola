@@ -26,7 +26,7 @@ def show_end_screen(message: str = "Game Over") -> None:
         window.blit(hint_surf, ( (WIDTH - hint_surf.get_width()) // 2,
                                   (HEIGHT - hint_surf.get_height()) // 2 + 40 ))
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(15)
 
     pygame.quit()
     sys.exit(0)
