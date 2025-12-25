@@ -103,7 +103,7 @@ def process_top_click_events(top_buttons) -> dict:
 
 # Places multiple ships on the board.
 # Returns a list of ship dictionaries.
-def generate_fleet(board, ship_lengths):
+def generate_fleet(board, ship_lengths=(3,4,5,6)):
     fleet = []
 
     for length in ship_lengths:

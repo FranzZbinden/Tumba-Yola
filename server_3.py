@@ -4,7 +4,6 @@
 
 import socket
 from Utilities import server_utilities as uc
-from Utilities.room import Room 
 from Utilities.room_manager import RoomManager 
 import sys
 import threading
@@ -22,29 +21,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # no need for cl
     s.listen()
 
     while True:
-        print("Waiting for player 1")
-        conn1, addr1 = s.accept() # blocks until recives a client connection
-        print("Connected to:", addr1)
+        conn, addr = s.accept()
+        print("Connected to:", addr)
 
         with manager_lock:
-            room, p0 = manager.create_room(conn1)
+            room, player_index, status = manager.matchmake(conn, board_size=10, ship_lengths=(3, 4, 5, 6))
             room_id = room.room_id
 
-        conn1.sendall(f"ROOM {room_id} PLAYER 0\n".encode())
+        conn.sendall(f"ROOM {room_id} PLAYER {player_index}\n".encode())
 
-        print("Waiting for player 2...")
-        conn2, addr2 = s.accept() # blocks until recives a seccond client connection
-        print("Connected to:", addr2)
-
-        with manager_lock:
-            room, p1, status = manager.join_room(conn2, room_id)
-
-        if status != "OK":
-            conn2.sendall(f"ERROR {status}\n".encode())
-            conn2.close()
-            continue
-
-        conn2.sendall(f"ROOM {room_id} PLAYER 1\n".encode())
-        conn1.sendall(b"OPPONENT_JOINED\n")
+        # If matched, notify both players that the game can start
+        if status == "OK":
+            try:
+                host = room.clients[0]
+                joiner = room.clients[1]
+                if host is not None:
+                    host.sendall(b"OPPONENT_JOINED\n")
+                if joiner is not None:
+                    joiner.sendall(b"OPPONENT_JOINED\n")
+            except Exception:
+                pass
 
 
