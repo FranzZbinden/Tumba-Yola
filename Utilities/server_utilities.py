@@ -32,6 +32,13 @@ def bind_safe(s: socket.socket, local_ip:str ,port: int) -> None:
 def create_matrix(magnitude: int=10, fill: int=0) -> list: 
     return [[fill]*magnitude for _ in range(magnitude)]
 
+# Sends board to the given connection
+def send_matrix(conn, matrix):
+    try:
+        matrix_str = uc.matrix_to_string(matrix)
+        conn.sendall(f"matrix|{matrix_str}\n".encode("utf-8"))
+    except:
+        pass
 
 # Places multiple ships on a NEW board.
 # - Board values: 0 = empty, 1 = ship (placed randomly)
