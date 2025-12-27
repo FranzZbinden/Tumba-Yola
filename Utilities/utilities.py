@@ -7,7 +7,7 @@ import os
 BUTTON_WIDTH, BUTTON_HEIGHT = 30, 30
 DIVIDER = 1 # space between
 MAGNITUDE = 10 # length -> (x,y)
-MUSIC ="source_files/sprites/Audio/pirate_7.mp3"
+MUSIC ="source_files/audio/pirate_7.mp3"
 
 # Colors
 BLACK = (0, 0, 0)
