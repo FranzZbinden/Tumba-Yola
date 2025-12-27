@@ -37,12 +37,6 @@ def reset_game_state():
     current_turn = 0
     hit_counts = {0: 0, 1: 0}
 
-def send_matrix(conn, matrix):
-    try:
-        matrix_str = uc.matrix_to_string(matrix)
-        conn.sendall(f"matrix|{matrix_str}\n".encode("utf-8"))
-    except:
-        pass
 
 def threaded_client(conn, player):
     global current_turn     
@@ -65,7 +59,7 @@ def threaded_client(conn, player):
             conn.sendall(f"fleet|{fleet_json}\n".encode("utf-8"))
         except Exception as e:
             conn.sendall(f"error|Fleet unavailable: {e}\n".encode("utf-8"))
-        send_matrix(conn, matrices[player])
+        ucs.send_matrix(conn, matrices[player])
 
     while True:
         try:
@@ -115,7 +109,7 @@ def threaded_client(conn, player):
                                 # Send updated matrix to the opponent (so their client updates)
                                 for c in clients:
                                     if conn_to_player.get(c) == opponent:
-                                        send_matrix(c, matrices[opponent])
+                                        ucs.send_matrix(c, matrices[opponent])
                                         break
                             except ValueError as e:
                                 conn.sendall(f"error|{e}\n".encode("utf-8"))

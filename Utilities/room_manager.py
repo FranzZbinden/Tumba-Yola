@@ -3,6 +3,7 @@
 # Last Modified:
 
 from Utilities.room import Room
+from collections import deque
 
 
 class RoomManager:
@@ -10,35 +11,63 @@ class RoomManager:
         self.rooms = {}          # room_id -> Room
         self.client_room = {}    # client -> room_id
         self.next_room_id = 1    # start at 1 
+        # FIFO matchmaking queue of room_ids that are waiting for a second player
+        self._waiting_rooms = deque()
 
-    def create_room(self, host_client):
-        self.leave(host_client)        # if already in a room, remove first (optional safety)
+    def _remove_waiting(self, room_id: int) -> None:
+        # Remove all occurrences (should be at most one, but be defensive)
+        if not self._waiting_rooms:
+            return
+        self._waiting_rooms = deque(rid for rid in self._waiting_rooms if rid != room_id)
 
-        room_id = self.next_room_id
-        self.next_room_id += 1  # uses current room id and add +1 for next room id
+    # Drop stale/invalid waiting rooms from the left side of the queue.
+    # A waiting room is valid if it exists and is not full and has a host client connected.
+    def _prune_waiting(self) -> None:
+        while self._waiting_rooms:
+            rid = self._waiting_rooms[0]
+            room = self.rooms.get(rid)
+            if room is None:
+                self._waiting_rooms.popleft()
+                continue
+            # Host must exist; joiner must be empty
+            if room.clients[0] is None or room.is_full():
+                self._waiting_rooms.popleft()
+                continue
+            break
 
-        room = Room(room_id, host_client)
-        self.rooms[room_id] = room
-        self.client_room[host_client] = room_id
 
-        return room, 0  # host is player 0
+    # Automatically pair clients in FIFO order.
+    # Returns:
+    #   (room, player_index, status)
+    #     - status: "WAITING" if client is first in a room, "OK" if paired immediately
+    def matchmake(self, client, board_size: int = 10, ship_lengths=(3, 4, 5, 6)):
+        # If already in a room or queued, remove first
+        self.leave(client)
 
-    def join_room(self, joiner_client, room_id):
-        self.leave(joiner_client)         # if already in a room, remove first (optional safety)
+        self._prune_waiting()
+        if not self._waiting_rooms:
+            room_id = self.next_room_id
+            self.next_room_id += 1
+            room = Room(room_id, client, board_size=board_size, ship_lengths=ship_lengths)
+            self.rooms[room_id] = room
+            self.client_room[client] = room_id
+            self._waiting_rooms.append(room_id)
+            return room, 0, "WAITING"
 
-        room = self.rooms.get(room_id)    # gets room from room_id
-        if room is None:
-            return None, None, "ROOM_NOT_FOUND"
-
-        if room.is_full():
-            return None, None, "ROOM_FULL"
+        # Join the oldest waiting room
+        room_id = self._waiting_rooms.popleft()
+        room = self.rooms.get(room_id)
+        if room is None or room.is_full() or room.clients[0] is None:
+            # Very defensive: if this room is stale, try again recursively once.
+            return self.matchmake(client, board_size=board_size, ship_lengths=ship_lengths)
 
         try:
-            player_index = room.add_joiner(joiner_client)  # returns 1
+            player_index = room.add_joiner(client)  # returns 1
         except ValueError:
-            return None, None, "ROOM_FULL"
+            # Room filled unexpectedly; try matchmaking again.
+            return self.matchmake(client, board_size=board_size, ship_lengths=ship_lengths)
 
-        self.client_room[joiner_client] = room_id
+        self.client_room[client] = room_id
         return room, player_index, "OK"
 
     # Removes given clint from its room
@@ -58,12 +87,14 @@ class RoomManager:
                 if c is not None:
                     self.client_room.pop(c, None)
             self.rooms.pop(room_id, None)
+            self._remove_waiting(room_id)
+        else:
+            # If room has exactly one player now, it becomes a waiting room again.
+            if not room.is_full() and room.clients[0] is not None:
+                self._remove_waiting(room_id)
+                self._waiting_rooms.append(room_id)
+            else:
+                self._remove_waiting(room_id)
 
         return room_id, idx # returns the room_id the client just left, and the index for the client that left
 
-    # returns the room the given client
-    def get_room_of(self, client):
-        room_id = self.client_room.get(client)
-        if room_id is None:
-            return None
-        return self.rooms.get(room_id)

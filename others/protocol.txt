@@ -1,0 +1,10 @@
+ Protocol (newline-delimited), compatible with `socket_.py`:
+ - ack|You are player: <0|1>
+ - room|<room_id>
+ - status|WAITING|OK
+ - fleet|<json>
+ - matrix|<collapsed_matrix>
+ - turn|<0|1>
+ - update|hit/miss|r,c      (sent to attacker after a valid attack)
+ - win|You won              (sent only to the winner; loser can detect loss by board hits)
+ - error|<message>
