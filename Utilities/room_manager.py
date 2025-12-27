@@ -1,6 +1,5 @@
-# Class that manages the rooms
+# Class that manages rooms
 # Created: 12/23/2025
-# Last Modified:
 
 from Utilities.room import Room
 from collections import deque
@@ -15,7 +14,7 @@ class RoomManager:
         self._waiting_rooms = deque()
 
     def _remove_waiting(self, room_id: int) -> None:
-        # Remove all occurrences (should be at most one, but be defensive)
+        # Remove all occurrences 
         if not self._waiting_rooms:
             return
         self._waiting_rooms = deque(rid for rid in self._waiting_rooms if rid != room_id)
@@ -58,7 +57,6 @@ class RoomManager:
         room_id = self._waiting_rooms.popleft()
         room = self.rooms.get(room_id)
         if room is None or room.is_full() or room.clients[0] is None:
-            # Very defensive: if this room is stale, try again recursively once.
             return self.matchmake(client, board_size=board_size, ship_lengths=ship_lengths)
 
         try:

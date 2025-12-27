@@ -16,12 +16,12 @@ class Room:
             self.boards[p_id] = board
             self.fleets[p_id] = fleet
 
-        # Optional gameplay state fields (handy for server-side turn logic)
+        # Optional gameplay state fields (for server-side turn logic)
         # self.current_turn = 0
         # self.hit_counts = {0: 0, 1: 0}
         # self.closed = False
 
-    # Adds the joiner client, not the host client
+    # Adds the joiner client
     def add_joiner(self, client):
         if self.clients[1] is None:
             self.clients[1] = client

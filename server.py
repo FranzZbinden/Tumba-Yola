@@ -1,179 +1,184 @@
+
+# Multi-room server.
+# The server is responsible for networking + threading.
+
 import socket
-from _thread import *
 import threading
-import sys
+
+from Utilities import server_utilities as su
 from Utilities import utilities as uc
-from Utilities import server_utilities as ucs
+from Utilities.game_state import GameState
+from Utilities.room_manager import RoomManager
 
-server = ucs.get_local_ip()
-port = 5555     
+LOCAL_IP = su.get_local_ip()
+PORT = 55555
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # IP v4 adress / socket object
+manager = RoomManager()
+manager_lock = threading.Lock()
 
-# Try if port is available to use
-try:
-    s.bind((server,port))
-except socket.error as e: 
-    print(f"Bind failed on {server}:{port} -> {e}")
-    sys.exit(1)
-
-s.listen(2) 
-print(f"Server started on {server}:{port}. Waiting for connection...")
-
-# Initialize per-player matrices and fleets 
-matrices, fleets = uc.init_matrices_and_fleets()
-current_turn = 0                      # 0 = player 1, 1 = player 2
-lock = threading.Lock()
-clients = []                          # Store all connected clients
-conn_to_player = {}                   # Map each connection to its player id
-hit_counts = {0: 0, 1: 0}             # Successful hits per player (attacks landed on opponent)
-TOTAL_SHIP_CELLS = 18                 
-free_players = [0, 1]                 # Available player slots (reuse on reconnect)
+# Room-scoped locks and game state
+room_locks: dict[int, threading.Lock] = {}
+room_states: dict[int, GameState] = {}
 
 
-def reset_game_state():
-    global matrices, fleets, current_turn, hit_counts
-    matrices, fleets = uc.init_matrices_and_fleets()
-    current_turn = 0
-    hit_counts = {0: 0, 1: 0}
+def _safe_send(conn, line: str) -> None:
+    try:
+        conn.sendall(line.encode("utf-8"))
+    except Exception:
+        pass
 
 
-def threaded_client(conn, player):
-    global current_turn     
+def _parse_attack(payload: str):
+    parts = payload.split(",")
+    if len(parts) != 2:
+        return None
+    try:
+        return int(parts[0]), int(parts[1])
+    except ValueError:
+        return None
 
-    # Register connection
-    with lock:
-        clients.append(conn)
-        conn_to_player[conn] = player
-    broadcast_turn()
 
-    # Send a welcome/ack line
-    conn.sendall(f"ack|You are player: {player}\n".encode("utf-8"))
-    print(f"Player {player} connected.")
-
-        # Send initial fleet and matrix to this client
-    with lock:
-        # Send fleet payload for processing by the client
-        try:
-            fleet_json = uc.normalize_fleet_for_wire(fleets[player])
-            conn.sendall(f"fleet|{fleet_json}\n".encode("utf-8"))
-        except Exception as e:
-            conn.sendall(f"error|Fleet unavailable: {e}\n".encode("utf-8"))
-        ucs.send_matrix(conn, matrices[player])
+def client_worker(conn, addr, room_id: int, player_id: int) -> None:
+    buf = bytearray()
+    print(f"[room {room_id}] player {player_id} connected from {addr}")
 
     while True:
         try:
-            data = conn.recv(2048).decode() # receives up to 2048 bytes, decodes to string
-            if not data:    
-                print(f"Player {player} desconnected.")
+            chunk = conn.recv(4096)
+            if not chunk:
                 break
-
-            # Process one or more newline-delimited messages
-            for msg in data.splitlines():
-                if not msg:
+            buf.extend(chunk)
+            while True:
+                i = buf.find(b"\n")
+                if i == -1:
+                    break
+                line = buf[:i].decode("utf-8", errors="replace").strip()
+                del buf[: i + 1]
+                if not line:
                     continue
 
-                t, sep, payload = msg.partition("|")
+                t, sep, payload = line.partition("|")
+                if not sep:
+                    _safe_send(conn, "error|Invalid message format\n")
+                    continue
 
                 if t == "attack":
-                    parts = payload.split(",")
-                    if len(parts) != 2:
-                        conn.sendall(b"error|Invalid Format\n")
+                    pos = _parse_attack(payload)
+                    if pos is None:
+                        _safe_send(conn, "error|Invalid Coordinates\n")
                         continue
 
-                    try:     # Safely access indexes to avoid out of range error
-                        pos = (int(parts[0]), int(parts[1]))
-                    except ValueError:
-                        conn.sendall(b"error|Invalid Coordinates\n")
+                    # Snapshot state/lock under manager lock
+                    with manager_lock:
+                        room = manager.rooms.get(room_id)
+                        state = room_states.get(room_id)
+                        lock = room_locks.get(room_id)
+
+                    if room is None or state is None or lock is None:
+                        _safe_send(conn, "error|Room not ready\n")
                         continue
 
-                    broadcast_needed = False
                     with lock:
-                            try:
-                                # Update ONLY the opponent's matrix
-                                opponent = 1 - player
-                                new_val = uc.apply_attack_to_cell(matrices[opponent], pos)  # 2 (miss -> blue) or 3 (hit -> red)
-                                print(f"Player {player} pressed {pos}")
-                                current_turn = 1 - current_turn  # Change turn
-                                broadcast_needed = True
+                        out = state.handle_attack(player_id, pos)
 
-                                outcome = "hit" if new_val == 3 else "miss"
-                                conn.sendall(f"update|{outcome}|{pos[0]},{pos[1]}\n".encode("utf-8"))
+                        # Identify sockets (may have disconnected)
+                        attacker_conn = room.clients[player_id]
+                        defender_conn = room.clients[1 - player_id]
 
-                                # Track hits and check winner
-                                if new_val == 3:
-                                    hit_counts[player] += 1
-                                    if hit_counts[player] >= TOTAL_SHIP_CELLS:
-                                        conn.sendall(b"win|You won\n")
+                        if attacker_conn is not None:
+                            for ln in out.attacker_lines:
+                                _safe_send(attacker_conn, ln)
+                        if defender_conn is not None:
+                            for ln in out.defender_lines:
+                                _safe_send(defender_conn, ln)
+                        for ln in out.broadcast_lines:
+                            if room.clients[0] is not None:
+                                _safe_send(room.clients[0], ln)
+                            if room.clients[1] is not None:
+                                _safe_send(room.clients[1], ln)
+                    continue
 
-                                # Send updated matrix to the opponent (so their client updates)
-                                for c in clients:
-                                    if conn_to_player.get(c) == opponent:
-                                        ucs.send_matrix(c, matrices[opponent])
-                                        break
-                            except ValueError as e:
-                                conn.sendall(f"error|{e}\n".encode("utf-8"))
+                _safe_send(conn, "error|Unknown type\n")
 
-                    # broadcast outside the lock to avoid deadlocking (broadcast_turn uses the same lock)
-                    if broadcast_needed:
-                        broadcast_turn()
-
-
-                elif t == "name":
-                    # Optionally store/display name; acknowledge for now
-                    conn.sendall(b"ack|ok\n")
-
-                else:
-                    conn.sendall(b"error|Unknown type\n")
-
-        except:
+        except Exception:
             break
 
-    with lock:
-        if conn in clients:
-            clients.remove(conn)
-        if conn in conn_to_player:
-            del conn_to_player[conn]
-        if player not in free_players and player in (0, 1):
-            free_players.append(player)
-        # If everyone disconnected, reset state for next game
-        if len(clients) == 0:
-            free_players[:] = [0, 1]
-            reset_game_state()
-    
-    print(f"Connection lost with {player}")
-    conn.close()
+    # Disconnect cleanup vvvvv
+    print(f"[room {room_id}] player {player_id} disconnected")
+    with manager_lock:
+        room = manager.rooms.get(room_id)
+        manager.leave(conn)
+        # If room still exists and has the other player, notify them
+        if room is not None:
+            other = room.get_other_client(conn)
+            if other is not None:
+                _safe_send(other, "error|Opponent disconnected\n")
 
-def broadcast_turn():
-    # Snapshot to avoid holding lock during network I/O
-    with lock:
-        msg = f"turn|{current_turn}\n".encode("utf-8")
-        targets = list(clients)
-    for c in targets:
-        try:
-            c.sendall(msg)
-        except:
-            pass
+        # If room removed, drop state/lock
+        if room_id not in manager.rooms:
+            room_states.pop(room_id, None)
+            room_locks.pop(room_id, None)
 
-# main loop
-while True:
-    print("waiting for players")
-    conn, addr = s.accept() # blocks until recives client connection
-    print("Connected to:", addr)
-
-    # Assign an available slot (0/1). If full, reject connection.
-    with lock:
-        if free_players:
-            player_id = free_players.pop(0)
-        else:
-            player_id = None
-    if player_id is None:
-        try:
-            conn.sendall(b"error|Server full (2 players max)\n")
-        except:
-            pass
+    try:
         conn.close()
-        continue
+    except Exception:
+        pass
 
-    start_new_thread(threaded_client, (conn, player_id))
 
+def _ensure_room_runtime(room_id: int, room) -> None:
+    if room_id not in room_locks:
+        room_locks[room_id] = threading.Lock()
+    if room_id not in room_states:
+        room_states[room_id] = GameState(room)
+
+
+def _send_start_payload(room_id: int, room) -> None:
+    state = room_states[room_id]
+    # Per-player payload
+    for pid in (0, 1):
+        c = room.clients[pid]
+        if c is None:
+            continue
+        for ln in state.start_payload_for(pid):
+            _safe_send(c, ln)
+
+    # Optional "ready" marker for UIs, -to implement...
+    if room.clients[0] is not None:
+        _safe_send(room.clients[0], "status|OK\n")
+    if room.clients[1] is not None:
+        _safe_send(room.clients[1], "status|OK\n")
+
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    su.bind_safe(s, LOCAL_IP, PORT)
+    s.listen()
+    print(f"Server started on {LOCAL_IP}:{PORT}. Waiting for connections...")
+
+    while True:
+        conn, addr = s.accept()
+        print("Connected to:", addr)
+
+        with manager_lock:
+            room, player_index, status = manager.matchmake(conn, board_size=10, ship_lengths=(3, 4, 5, 6))
+            room_id = room.room_id
+            _ensure_room_runtime(room_id, room)
+
+        # Welcome lines (Socket_.connect waits for ack|)
+        _safe_send(conn, f"ack|You are player: {player_index}\n")
+        _safe_send(conn, f"room|{room_id}\n")
+        _safe_send(conn, f"status|{status}\n")
+
+        # Spawn receiver thread for this connection
+        threading.Thread(
+            target=client_worker,
+            args=(conn, addr, room_id, player_index),
+            daemon=True,
+        ).start()
+
+        # If matched, send full game start payload to both
+        if status == "OK":
+            with manager_lock:
+                room_live = manager.rooms.get(room_id)
+            if room_live is not None and room_live.is_full():
+                with room_locks[room_id]:
+                    _send_start_payload(room_id, room_live)
