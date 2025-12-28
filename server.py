@@ -8,7 +8,7 @@ from Utilities import server_utilities as suc
 from Utilities.game_state import GameState
 from Utilities.room_manager import RoomManager
 
-LOCAL_IP = suc.get_local_ip()
+LOCAL_IP = "0.0.0.0"
 PORT = 55555
 
 manager = RoomManager()

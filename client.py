@@ -7,7 +7,7 @@ import pygame as p
 from pathlib import Path
 import subprocess
 
-DEFAULT_SERVER_IP = "IP"
+DEFAULT_SERVER_IP = "150.136.155.41"
 PORT = 55555
 
 def main():
