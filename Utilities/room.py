@@ -1,6 +1,4 @@
-
-
-from Utilities import server_utilities as uc
+from Utilities import server_utilities as suc
 
 class Room:
     def __init__(self, room_id, host_client, board_size: int = 10, ship_lengths=(3, 4, 5, 6)):
@@ -12,7 +10,7 @@ class Room:
         self.fleets = {}    # for rendering - list
 
         for p_id in (0, 1):
-            board, fleet = uc.generate_fleet(board_size, ship_lengths)
+            board, fleet = suc.generate_fleet(board_size, ship_lengths)
             self.boards[p_id] = board
             self.fleets[p_id] = fleet
 

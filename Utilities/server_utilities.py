@@ -5,7 +5,6 @@
 import socket
 import sys
 import random as rdm
-from Utilities import utilities as uc
 
 
 # Get local ip 
@@ -19,7 +18,11 @@ def get_local_ip() -> str:
             return socket.gethostbyname(socket.gethostname())
         except Exception:
             return "127.0.0.1"
+        
 
+# From 2d List to collapsed string
+def matrix_to_string(matrix: list) -> str:
+    return ';'.join(','.join(map(str, row)) for row in matrix)
 
 # Enhanced bind funcion
 def bind_safe(s: socket.socket, local_ip:str ,port: int) -> None:
@@ -36,7 +39,7 @@ def create_matrix(magnitude: int=10, fill: int=0) -> list:
 # Sends board to the given connection
 def send_matrix(conn, matrix):
     try:
-        matrix_str = uc.matrix_to_string(matrix)
+        matrix_str = matrix_to_string(matrix)
         conn.sendall(f"matrix|{matrix_str}\n".encode("utf-8"))
     except:
         pass
@@ -85,3 +88,17 @@ def place_ship_randomly(board, length):
                 "end": coords[-1],
                 "dir": "horizontal" if orientation == "H" else "vertical"
             }
+
+# Assign a digit based on the status of cell being attacked 
+def apply_attack_to_cell(matrix: list, position: tuple) -> int:
+    row, col = position
+    current = matrix[row][col]
+    if current == 0:
+        matrix[row][col] = 2
+        return 2
+    if current == 1:
+        matrix[row][col] = 3
+        return 3
+    if current in (2, 3):   # already attacked
+        raise ValueError(f"Cell at {position} already attacked.")
+    raise ValueError(f"Invalid cell value {current} at {position}.")

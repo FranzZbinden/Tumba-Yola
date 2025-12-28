@@ -5,11 +5,10 @@ from Utilities import end_screen
 import sys
 import pygame as p
 from pathlib import Path
-
+import subprocess
 
 DEFAULT_SERVER_IP = "192.168.50.247"
 PORT = 55555
-
 
 def main():
     # Allow running with no args during dev (hard-coded server IP) -for now
@@ -65,8 +64,11 @@ def main():
         win_msg = n.get_win()
         if win_msg:
             p.mixer.music.fadeout(2500)
-            end_screen.show_end_screen("You won")
-            break
+            gui.shutdown()
+            choice = end_screen.show_end_screen("You won", result="win")
+            if choice == "next_match":
+                subprocess.Popen([sys.executable, "client.py", server_ip, str(port)], cwd=Path(__file__).parent)
+            return
 
         updated_str_matrix = n.get_matrix()
         if updated_str_matrix:
@@ -82,8 +84,11 @@ def main():
             hits = sum(1 for row in bottom_matrix for v in row if v == 3)
             if hits >= TOTAL_SHIP_CELLS:
                 p.mixer.music.fadeout(2500)
-                end_screen.show_end_screen("You Lose")
-                break
+                gui.shutdown()
+                choice = end_screen.show_end_screen("You Lose", result="lose")
+                if choice == "next_match":
+                    subprocess.Popen([sys.executable, "client.py", server_ip, str(port)], cwd=Path(__file__).parent)
+                return
 
         events = gui.process_events()
         if events["quit"]:

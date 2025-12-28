@@ -1,7 +1,6 @@
 import socket
 from collections import deque
 
-
 class Socket_:
     def __init__(self, server_ip: str, port: int = 5555):
         if not server_ip:

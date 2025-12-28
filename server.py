@@ -1,16 +1,14 @@
-
 # Multi-room server.
 # The server is responsible for networking + threading.
 
 import socket
 import threading
 
-from Utilities import server_utilities as su
-from Utilities import utilities as uc
+from Utilities import server_utilities as suc
 from Utilities.game_state import GameState
 from Utilities.room_manager import RoomManager
 
-LOCAL_IP = su.get_local_ip()
+LOCAL_IP = suc.get_local_ip()
 PORT = 55555
 
 manager = RoomManager()
@@ -150,7 +148,7 @@ def _send_start_payload(room_id: int, room) -> None:
 
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    su.bind_safe(s, LOCAL_IP, PORT)
+    suc.bind_safe(s, LOCAL_IP, PORT)
     s.listen()
     print(f"Server started on {LOCAL_IP}:{PORT}. Waiting for connections...")
 

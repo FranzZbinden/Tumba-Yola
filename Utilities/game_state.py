@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import List, Tuple
 
 from Utilities import utilities as uc
-
+from Utilities import server_utilities as suc
 
 @dataclass
 class Outbound: # server -> client
@@ -83,7 +83,7 @@ class GameState:
             )
 
         try:
-            new_val = uc.apply_attack_to_cell(board, pos)  # mutates defender board
+            new_val = suc.apply_attack_to_cell(board, pos)  # mutates defender board
         except ValueError as e:
             return Outbound(
                 attacker_lines=[f"error|{e}\n"],

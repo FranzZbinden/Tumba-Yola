@@ -4,7 +4,6 @@
 from Utilities.room import Room
 from collections import deque
 
-
 class RoomManager:
     def __init__(self):
         self.rooms = {}          # room_id -> Room

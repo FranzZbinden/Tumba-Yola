@@ -44,20 +44,6 @@ def assign_activation_to_cell(matrix: list, position: tuple):
     else:
         matrix[position[0]][position[1]] = 1
 
-# Assign a digit based on the status of cell being attacked 
-def apply_attack_to_cell(matrix: list, position: tuple) -> int:
-    row, col = position
-    current = matrix[row][col]
-    if current == 0:
-        matrix[row][col] = 2
-        return 2
-    if current == 1:
-        matrix[row][col] = 3
-        return 3
-    if current in (2, 3):   # already attacked
-        raise ValueError(f"Cell at {position} already attacked.")
-    raise ValueError(f"Invalid cell value {current} at {position}.")
-
 # Create grid of buttons
 def create_buttons(rows: int, cols: int) -> list:
     buttons = []
