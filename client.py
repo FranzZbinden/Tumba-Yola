@@ -7,7 +7,7 @@ import pygame as p
 from pathlib import Path
 import subprocess
 
-DEFAULT_SERVER_IP = "192.168.50.247"
+DEFAULT_SERVER_IP = "IP"
 PORT = 55555
 
 def main():
@@ -53,6 +53,12 @@ def main():
         # Non-blocking updates from server
         new_turn = n.get_turn()
         if new_turn is not None:
+            # At match start, only the starting player sees "YOU START" for 3s.
+            # On later turn switches to this client, show "YOUR TURN" for 1s.
+            if turn is None and new_turn == client_id:
+                gui.show_toast("YOU START", duration_ms=3000, color=(60, 220, 90))
+            elif new_turn == client_id and turn != client_id:
+                gui.show_toast("YOUR TURN", duration_ms=1000, color=(60, 220, 90))
             turn = new_turn
 
         if fleet_json is None:

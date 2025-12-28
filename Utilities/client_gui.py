@@ -21,6 +21,10 @@ class ClientGUI:
         self.clock = pygame.time.Clock()
         pygame.font.init()
         self.font = pygame.font.SysFont(None, 50)
+        self._toast_font = uc.load_jersey10_font(64)
+        self._toast_text: str | None = None
+        self._toast_color: tuple[int, int, int] = (255, 255, 255)
+        self._toast_until_ms: int = 0
 
         self._bg_tile = None
         self._miss_sprite = None
@@ -112,6 +116,11 @@ class ClientGUI:
                 button.rect.x += center_x
                 button.rect.y += bottom_offset_y
 
+    def show_toast(self, text: str, duration_ms: int = 1000, color: tuple[int, int, int] = (60, 220, 90)) -> None:
+        self._toast_text = text
+        self._toast_color = color
+        self._toast_until_ms = pygame.time.get_ticks() + max(0, int(duration_ms))
+
     # checks for events, button down or close-game.
     def process_events(self) -> dict:
         return uc.process_top_click_events(self.top_buttons)
@@ -201,6 +210,25 @@ class ClientGUI:
                     # (background stays visible because we avoid painting red)
                     button.image = None
                 button.draw(self.window)
+
+        # Toast overlay "YOUR TURN"
+        now_ms = pygame.time.get_ticks()
+        if self._toast_text and now_ms < self._toast_until_ms:
+            label = self._toast_font.render(self._toast_text, True, self._toast_color)
+            padding_x, padding_y = 18, 10
+            rect = label.get_rect()
+            rect.centerx = self.window.get_width() // 2
+            rect.top = 12
+
+            bg = pygame.Surface((rect.width + padding_x * 2, rect.height + padding_y * 2), pygame.SRCALPHA)
+            bg.fill((0, 0, 0, 160))
+            bg_rect = bg.get_rect()
+            bg_rect.centerx = rect.centerx
+            bg_rect.centery = rect.centery
+            self.window.blit(bg, bg_rect.topleft)
+            self.window.blit(label, rect.topleft)
+        elif self._toast_text and now_ms >= self._toast_until_ms:
+            self._toast_text = None
 
         pygame.display.flip()
 

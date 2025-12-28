@@ -17,6 +17,20 @@ OCEAN_BLUE = (0, 88, 171)
 RED = (255, 0, 0)
 GREY = (200, 200, 200)
 
+
+def load_jersey10_font(size: int, fallback_name: str = "sans-serif"):
+    import pygame  
+    from pathlib import Path
+
+    project_root = Path(__file__).parent.parent
+    font_path = project_root / "source_files" / "fonts" / "Jersey10-Regular.ttf"
+    try:
+        if font_path.exists():
+            return pygame.font.Font(str(font_path), size)
+    except Exception:
+        pass
+    return pygame.font.SysFont(fallback_name, size)
+
 # Uses defauld magnitude set above
 def create_matrix() -> list: 
     return [[0]*MAGNITUDE for _ in range(MAGNITUDE)]

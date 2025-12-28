@@ -1,5 +1,6 @@
 import pygame
 from pathlib import Path
+from Utilities import utilities as uc
 
 # Result: "win" or "lose"
 def _load_bg(result: str, size: tuple[int, int]) -> pygame.Surface | None:
@@ -11,18 +12,6 @@ def _load_bg(result: str, size: tuple[int, int]) -> pygame.Surface | None:
         return pygame.transform.smoothscale(img, size)
     except Exception:
         return None
-
-# Falls back to a system font if the file isn't available.
-def _load_jersey10_font(size: int) -> pygame.font.Font:
-    project_root = Path(__file__).parent.parent
-    font_path = project_root / "source_files" / "fonts" / "Jersey10-Regular.ttf"
-    try:
-        if font_path.exists():
-            return pygame.font.Font(str(font_path), size)
-    except Exception:
-        pass
-    return pygame.font.SysFont("sans-serif", size)
-
 
 def _draw_button(surface: pygame.Surface, rect: pygame.Rect, text: str, font: pygame.font.Font, bg: tuple[int, int, int]):
     pygame.draw.rect(surface, bg, rect, border_radius=10)
@@ -41,8 +30,8 @@ def show_end_screen(message: str = "Game Over", result: str | None = None) -> st
     pygame.display.set_caption("Game Result")
     clock = pygame.time.Clock()
 
-    title_font = _load_jersey10_font(90)
-    button_font = _load_jersey10_font(40)
+    title_font = uc.load_jersey10_font(90)
+    button_font = uc.load_jersey10_font(40)
     hint_font = pygame.font.SysFont("sans-serif", 20)
 
     # Pick background based on result (default: dark fill)
