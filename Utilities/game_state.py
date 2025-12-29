@@ -1,4 +1,3 @@
-
 # Room-scoped gameplay logic.
 # This module owns turn validation, attack application, and win detection.
 
@@ -30,13 +29,8 @@ class GameState:
         self.total_ship_cells = getattr(room, "total_ship_cells", 18)
         self.closed = False
 
-
     # Lines to send when the room is ready for this player:
-    # - fleet|...
-    # - matrix|...
-    # - turn|...
     def start_payload_for(self, player_id: int) -> List[str]:
-
         fleet_json = uc.normalize_fleet_for_wire(self.room.fleets[player_id])
         matrix_str = uc.matrix_to_string(self.room.boards[player_id])
         return [

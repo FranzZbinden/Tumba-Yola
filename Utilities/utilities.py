@@ -2,12 +2,18 @@ from . import button as btn
 import random as rdm
 import json
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from socket_ import Socket_
 
 # Boards data
 BUTTON_WIDTH, BUTTON_HEIGHT = 30, 30
 DIVIDER = 1 # space between
 MAGNITUDE = 10 # length -> (x,y)
 MUSIC ="source_files/audio/pirate_7.mp3"
+SHIP_LENGTHS = (3, 4, 5, 6)
+TOTAL_SHIP_CELLS = sum(SHIP_LENGTHS)
 
 # Colors
 BLACK = (0, 0, 0)
@@ -415,10 +421,18 @@ def init_matrices_and_fleets():
     fleets = {}
     for pid in (0, 1):
         matrix = create_matrix()
-        fleet = generate_fleet(matrix, [3, 4, 5, 6])
+        fleet = generate_fleet(matrix, SHIP_LENGTHS)
         matrices[pid] = matrix
         fleets[pid] = fleet
     return matrices, fleets
+
+# Create a new TCP connection to the game server and ensure we got a player_id.
+def connect_socket(server_ip: str, port: int) -> "Socket_":
+    from socket_ import Socket_
+    n = Socket_(server_ip, port=port)
+    if n.player_id is None:
+        raise RuntimeError("Failed to connect to server (no player_id received)")
+    return n
 
 
 #  Return the NEW value of the first cell that changed, or None if no change.

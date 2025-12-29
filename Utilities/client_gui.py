@@ -1,11 +1,11 @@
-import pygame, sys, time
+import pygame
 from . import utilities as uc
 from pathlib import Path
 import math
 
 class ClientGUI:
     def __init__(self):
-        # vvvvvvvvvvvvvv  Compute grid dimensions from utilities vvvvvvvvv
+        # vvvvvvvvvvv  Compute grid dimensions from utilities vvvvvvvvv
         self.MAGNITUDE = uc.MAGNITUDE
         self.DIVIDER = uc.DIVIDER
         self.cell_size = uc.BUTTON_WIDTH  # will be recomputed on resize
@@ -28,6 +28,8 @@ class ClientGUI:
         pygame.font.init()
         self.font = pygame.font.SysFont(None, 50)
         self._toast_font = uc.load_jersey10_font(64)
+        self._score_font = uc.load_jersey10_font(72)
+        self._total_ship_cells = uc.TOTAL_SHIP_CELLS
         self._toast_text: str | None = None
         self._toast_color: tuple[int, int, int] = (255, 255, 255)
         self._toast_until_ms: int = 0
@@ -96,7 +98,7 @@ class ClientGUI:
         except Exception:
             self._you_icon = None
 
-        # Create buttons for both grids vvvvvvvvvvvvvvvvv
+        # Create buttons for both grids 
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
         self.bottom_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
 
@@ -107,12 +109,8 @@ class ClientGUI:
         # Reserve some space for edge icons and breathing room
         margin_x = max(40, self._icon_size[0] + 15)
         margin_y = 24
-
-        # Available width for one grid
-        avail_w = max(1, width - 2 * margin_x)
-
-        # Available height for two stacked grids + padding
-        grids_space = max(1, height - 2 * margin_y - self.INTER_GRID_PADDING)
+        avail_w = max(1, width - 2 * margin_x)        # Available width for one grid
+        grids_space = max(1, height - 2 * margin_y - self.INTER_GRID_PADDING)        # Available height for two stacked grids + padding
 
         # Use a square cell size that fits both constraints
         by_w = (avail_w - (self.MAGNITUDE - 1) * self.DIVIDER) // self.MAGNITUDE
@@ -181,6 +179,78 @@ class ClientGUI:
         overlay.fill((0, 0, 0, max(0, min(255, int(alpha)))))
         self.window.blit(overlay, rect.topleft)
 
+    # Show win/lose screen in the SAME window: overlay on top of the boards.
+    def show_end_screen(self, top_matrix: list, bottom_matrix: list, message: str = "Game Over") -> str:
+        pygame.display.set_caption("Game Result")
+        clock = pygame.time.Clock()
+
+        title_font = uc.load_jersey10_font(110)
+        button_font = uc.load_jersey10_font(44)
+
+        def draw_button(rect: pygame.Rect, text: str, bg: tuple[int, int, int]) -> None:
+            pygame.draw.rect(self.window, bg, rect, border_radius=10)
+            pygame.draw.rect(self.window, (0, 0, 0), rect, 2, border_radius=10)
+            label = button_font.render(text, True, (255, 255, 255))
+            self.window.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
+
+        action = "quit"
+        running = True
+        while running:
+            click_pos = None
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    action = "quit"
+                    running = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self.handle_resize(event.w, event.h)
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                    action = "quit"
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    click_pos = event.pos
+
+            width, height = self.window.get_size()
+
+            # Draw the final game state
+            self.draw(top_matrix, bottom_matrix, interactive=False, flip=False)
+
+            # Overlay: dim the screen
+            dim = pygame.Surface((width, height), pygame.SRCALPHA)
+            dim.fill((0, 0, 0, 110))
+            self.window.blit(dim, (0, 0))
+
+            # Center message
+            title = title_font.render(message, True, (255, 255, 255))
+            shadow = title_font.render(message, True, (0, 0, 0))
+            tr = title.get_rect()
+            tr.center = (width // 2, height // 2)
+            self.window.blit(shadow, (tr.x + 3, tr.y + 3))
+            self.window.blit(title, tr)
+
+            # Bottom-left / bottom-right buttons
+            pad = 22
+            btn_h = 56
+            btn_w = min(360, max(220, width // 3))
+            quit_rect = pygame.Rect(pad, height - pad - btn_h, btn_w, btn_h)
+            next_rect = pygame.Rect(width - pad - btn_w, height - pad - btn_h, btn_w, btn_h)
+
+            draw_button(quit_rect, "Quit", (220, 60, 60))
+            draw_button(next_rect, "Search next match", (40, 160, 90))
+
+            # Handle click
+            if click_pos is not None:
+                if quit_rect.collidepoint(click_pos):
+                    action = "quit"
+                    running = False
+                elif next_rect.collidepoint(click_pos):
+                    action = "next_match"
+                    running = False
+
+            pygame.display.flip()
+            clock.tick(30)
+
+        return action
+
     def show_toast(self, text: str, duration_ms: int = 1000, color: tuple[int, int, int] = (60, 220, 90)) -> None:
         self._toast_text = text
         self._toast_color = color
@@ -193,9 +263,9 @@ class ClientGUI:
         return events
 
     # draw both boards according to their 2d lists and update the window.
-    def draw(self, top_matrix: list, bottom_matrix: list) -> None:
+    def draw(self, top_matrix: list, bottom_matrix: list, interactive: bool = True, flip: bool = True) -> None:
         self.clock.tick(15)
-        hover = self._hovered_button(pygame.mouse.get_pos())
+        hover = self._hovered_button(pygame.mouse.get_pos()) if interactive else None
         if self._bg_tile is not None:
             tw, th = self._bg_tile.get_size()
             ww, wh = self.window.get_size()
@@ -247,8 +317,8 @@ class ClientGUI:
             for button in row:
                 r, c = button.index
                 cell_val = bottom_matrix[r][c]
-                # Miss marker on your board (opponent missed)
-                if cell_val == 2 and self._miss_sprite is not None:
+                # Miss marker on your board 
+                if cell_val == 2 and self._miss_sprite is not None: # opponent missed
                     button.image = self._miss_sprite
                     button.color = None
                     button.draw(self.window)
@@ -260,26 +330,53 @@ class ClientGUI:
                 elif cell_val == 1 and getattr(button, "normal_image", None) is not None:
                     button.image = button.normal_image
                 else:
-                    # Clear miss marker if cell changed away from miss
-                    if getattr(button, "image", None) is self._miss_sprite:
+                    if getattr(button, "image", None) is self._miss_sprite:                     # Clear miss marker if cell changed away from miss
                         button.image = None
-                # If there's a ship sprite on this cell, don't draw a solid color behind it;
-                # let the tiled water background show through the sprite's transparent pixels.
+
                 if cell_val in (1, 3) and getattr(button, "image", None) is not None:
-                    # Don't paint behind ship sprites (normal or destroyed)
                     button.color = None
                 else:
-                    # Also avoid painting hit ship cells red; keep background visible
                     if cell_val == 3:
                         button.color = None
                     else:
                         button.color = None if cell_val == 0 else uc.color_for(cell_val)
                 # If ship cell was hit, remove sprite so red shows through
                 if cell_val == 3 and getattr(button, "destroyed_image", None) is None and hasattr(button, "image"):
-                    # Fallback: if no destroyed sprite is available, remove sprite
-                    # (background stays visible because we avoid painting red)
                     button.image = None
                 button.draw(self.window)
+
+        # Side score counters (enemy left / you right): show only "X/X"
+        try:
+            enemy_destroyed = sum(1 for row in top_matrix for v in row if v == 3)
+            my_destroyed = sum(1 for row in bottom_matrix for v in row if v == 3)
+        except Exception:
+            enemy_destroyed = 0
+            my_destroyed = 0
+
+        total = int(self._total_ship_cells)
+        enemy_text = f"{enemy_destroyed}/{total}"
+        my_text = f"{my_destroyed}/{total}"
+
+        # Anchor just outside the board, centered vertically in the window
+        y_mid = self.window.get_height() // 2
+        board_left = self.top_buttons[0][0].rect.left
+        board_right = self.top_buttons[0][-1].rect.right
+        pad = 20
+
+        # Render with a small shadow for readability on any background
+        enemy_label = self._score_font.render(enemy_text, True, (255, 255, 255))
+        enemy_shadow = self._score_font.render(enemy_text, True, (0, 0, 0))
+        er = enemy_label.get_rect()
+        er.midright = (board_left - pad, y_mid)
+        self.window.blit(enemy_shadow, (er.x + 2, er.y + 2))
+        self.window.blit(enemy_label, er)
+
+        my_label = self._score_font.render(my_text, True, (255, 255, 255))
+        my_shadow = self._score_font.render(my_text, True, (0, 0, 0))
+        mr = my_label.get_rect()
+        mr.midleft = (board_right + pad, y_mid)
+        self.window.blit(my_shadow, (mr.x + 2, mr.y + 2))
+        self.window.blit(my_label, mr)
 
         # Toast overlay "YOUR TURN"
         now_ms = pygame.time.get_ticks()
@@ -300,7 +397,8 @@ class ClientGUI:
         elif self._toast_text and now_ms >= self._toast_until_ms:
             self._toast_text = None
 
-        pygame.display.flip()
+        if flip:
+            pygame.display.flip()
 
     # def music(repeat: int, music_path):
     #     pygame.mixer.init()
@@ -320,4 +418,27 @@ class ClientGUI:
 
     def shutdown(self) -> None:
         pygame.quit()
+
+    def reset_for_new_match(self) -> None:
+        # Clear toast
+        self._toast_text = None
+        self._toast_until_ms = 0
+
+        # Clear button visuals and sprite 
+        for grid in (self.top_buttons, self.bottom_buttons):
+            for row in grid:
+                for b in row:
+                    b.image = None
+                    b.color = None
+                    if hasattr(b, "normal_image"):
+                        b.normal_image = None
+                    if hasattr(b, "destroyed_image"):
+                        b.destroyed_image = None
+
+        # Re apply layout based on current window size 
+        try:
+            w, h = self.window.get_size()
+            self._apply_window_size(w, h)
+        except Exception:
+            pass
 

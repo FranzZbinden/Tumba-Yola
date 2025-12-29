@@ -33,7 +33,6 @@ class RoomManager:
                 continue
             break
 
-
     # Automatically pair clients in FIFO order.
     # Returns:
     #   (room, player_index, status)
@@ -92,6 +91,5 @@ class RoomManager:
                 self._waiting_rooms.append(room_id)
             else:
                 self._remove_waiting(room_id)
-
         return room_id, idx # returns the room_id the client just left, and the index for the client that left
 

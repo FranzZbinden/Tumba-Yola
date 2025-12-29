@@ -140,7 +140,7 @@ def _send_start_payload(room_id: int, room) -> None:
         for ln in state.start_payload_for(pid):
             _safe_send(c, ln)
 
-    # Optional "ready" marker for UIs, -to implement...
+    # to implement
     if room.clients[0] is not None:
         _safe_send(room.clients[0], "status|OK\n")
     if room.clients[1] is not None:
@@ -161,7 +161,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             room_id = room.room_id
             _ensure_room_runtime(room_id, room)
 
-        # Welcome lines (Socket_.connect waits for ack|)
+        # welcome - Socket_.connect: waits for ack
         _safe_send(conn, f"ack|You are player: {player_index}\n")
         _safe_send(conn, f"room|{room_id}\n")
         _safe_send(conn, f"status|{status}\n")
@@ -172,6 +172,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             args=(conn, addr, room_id, player_index),
             daemon=True,
         ).start()
+
+        # If waiting for an opponent, still send this player's board/fleet so their UI resets immediately.
+        if status == "WAITING":
+            with room_locks[room_id]:
+                state = room_states.get(room_id)
+                if state is not None:
+                    lines = state.start_payload_for(player_index)
+                    for ln in lines:
+                        if ln.startswith("turn|"):
+                            continue
+                        _safe_send(conn, ln)
 
         # If matched, send full game start payload to both
         if status == "OK":

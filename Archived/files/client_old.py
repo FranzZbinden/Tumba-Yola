@@ -2,7 +2,7 @@ from socket_ import Socket_
 from Utilities import utilities as uc
 from Utilities import client_gui as client_gui
 import sys
-from Utilities import end_screen
+from Archived.files import end_screen
 import pygame as p
 from pathlib import Path
 

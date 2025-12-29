@@ -78,13 +78,10 @@ class Socket_:
     def _pop_left(self, q: deque):
         return q.popleft() if q else None
 
+    # Read from the socket into _buf and dispatch all complete newline-delimited messages.
+    # - blocking=False: do not wait for data (safe for GUI loop)
+    # - blocking=True: wait for data (useful right after send() / during connect())
     def _pump(self, blocking: bool) -> None:
-        """
-        Read from the socket into _buf and dispatch all complete newline-delimited messages.
-
-        - blocking=False: do not wait for data (safe for GUI loop)
-        - blocking=True: wait for data (useful right after send() / during connect())
-        """
         prev_block = self.client.getblocking()
         try:
             self.client.setblocking(blocking)
@@ -210,4 +207,14 @@ class Socket_:
     def get_turn(self) -> int | None:
         self._pump(blocking=False)
         return self._pop_left(self._q_turn)
+
+    def close(self) -> None:
+        try:
+            try:
+                self.client.shutdown(socket.SHUT_RDWR)
+            except Exception:
+                pass
+            self.client.close()
+        except Exception:
+            pass
 
