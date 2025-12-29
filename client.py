@@ -46,6 +46,8 @@ def main():
     p.mixer.music.play(loops=10, start=10, fade_ms=2000)
     miss_sfx = p.mixer.Sound(str(audio_dir / "miss.mp3"))
     hit_sfx = p.mixer.Sound(str(audio_dir / "crash.mp3"))
+    hover_sfx = p.mixer.Sound(str(audio_dir / "hover_sound.mp3"))
+    last_hover = None
 
     turn = None
     run = True
@@ -102,6 +104,11 @@ def main():
         if events.get("resize"):
             w, h = events["resize"]
             gui.handle_resize(w, h)
+        hover = events.get("hover")
+        if hover != last_hover:
+            if hover is not None and hover_sfx is not None:
+                hover_sfx.play()
+            last_hover = hover
 
         if events.get("top_click") is not None and turn == client_id:
             pos_str = uc.make_pos(events["top_click"])

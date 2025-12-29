@@ -14,7 +14,7 @@ class ClientGUI:
         # vvvvvvvvvvvvvv  Padding between the two boards (match client expectation: DIVIDER * 3) 
         self.INTER_GRID_PADDING = uc.DIVIDER * 3
 
-        # Make window width close to grid width (with a small margin)
+        # Make window width close to grid width
         self._width_margin = 260
         self._min_width = max(400, self.GRID_WIDTH + self._width_margin)
         self._min_height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
@@ -67,7 +67,7 @@ class ClientGUI:
         try:
             project_root = Path(__file__).parent.parent
             miss_path = project_root / "source_files" / "sprites" / "pool_float_orange.PNG"
-            self._miss_sprite = pygame.image.load(str(miss_path)).convert_alpha()            # Load raw; Button.draw() will scale to current cell size.
+            self._miss_sprite = pygame.image.load(str(miss_path)).convert_alpha()
         except Exception:
             self._miss_sprite = None
 
@@ -75,7 +75,7 @@ class ClientGUI:
         try:
             project_root = Path(__file__).parent.parent
             hit_path = project_root / "source_files" / "sprites" / "pool_float_red.PNG"
-            self._hit_sprite = pygame.image.load(str(hit_path)).convert_alpha()             # Load raw; Button.draw() will scale to current cell size.
+            self._hit_sprite = pygame.image.load(str(hit_path)).convert_alpha()
         except Exception:
             self._hit_sprite = None
 
@@ -95,8 +95,6 @@ class ClientGUI:
             self._you_icon = pygame.transform.smoothscale(img, self._icon_size)
         except Exception:
             self._you_icon = None
-
-
 
         # Create buttons for both grids vvvvvvvvvvvvvvvvv
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
@@ -167,6 +165,22 @@ class ClientGUI:
         self.window = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         self._apply_window_size(width, height)
 
+    # Return ("top", (r,c)) or None (bottom board is read-only / non-interactive)
+    def _hovered_button(self, pos: tuple[int, int]):
+        for row in self.top_buttons:
+            for button in row:
+                if button.rect.collidepoint(pos):
+                    return ("top", button.index)
+        return None
+
+    # Darken the hovered cell 
+    def _draw_hover_overlay(self, rect: pygame.Rect, alpha: int = 55) -> None:
+        if rect.width <= 0 or rect.height <= 0:
+            return
+        overlay = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, max(0, min(255, int(alpha)))))
+        self.window.blit(overlay, rect.topleft)
+
     def show_toast(self, text: str, duration_ms: int = 1000, color: tuple[int, int, int] = (60, 220, 90)) -> None:
         self._toast_text = text
         self._toast_color = color
@@ -174,11 +188,14 @@ class ClientGUI:
 
     # checks for events, button down or close-game.
     def process_events(self) -> dict:
-        return uc.process_top_click_events(self.top_buttons)
+        events = uc.process_top_click_events(self.top_buttons)
+        events["hover"] = self._hovered_button(pygame.mouse.get_pos())
+        return events
 
     # draw both boards according to their 2d lists and update the window.
     def draw(self, top_matrix: list, bottom_matrix: list) -> None:
         self.clock.tick(15)
+        hover = self._hovered_button(pygame.mouse.get_pos())
         if self._bg_tile is not None:
             tw, th = self._bg_tile.get_size()
             ww, wh = self.window.get_size()
@@ -222,6 +239,8 @@ class ClientGUI:
                         button.image = None
                     button.color = None if cell_val == 0 else uc.color_for(cell_val)
                 button.draw(self.window)
+                if hover == ("top", button.index):
+                    self._draw_hover_overlay(button.rect)
 
         # Draw bottom board
         for row in self.bottom_buttons:
