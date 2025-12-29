@@ -6,17 +6,23 @@ import math
 class ClientGUI:
     def __init__(self):
         # vvvvvvvvvvvvvv  Compute grid dimensions from utilities vvvvvvvvv
-        self.GRID_WIDTH = uc.MAGNITUDE * uc.BUTTON_WIDTH + (uc.MAGNITUDE - 1) * uc.DIVIDER
-        self.GRID_HEIGHT = uc.MAGNITUDE * uc.BUTTON_HEIGHT + (uc.MAGNITUDE - 1) * uc.DIVIDER
+        self.MAGNITUDE = uc.MAGNITUDE
+        self.DIVIDER = uc.DIVIDER
+        self.cell_size = uc.BUTTON_WIDTH  # will be recomputed on resize
+        self.GRID_WIDTH = self.MAGNITUDE * self.cell_size + (self.MAGNITUDE - 1) * self.DIVIDER
+        self.GRID_HEIGHT = self.MAGNITUDE * self.cell_size + (self.MAGNITUDE - 1) * self.DIVIDER
         # vvvvvvvvvvvvvv  Padding between the two boards (match client expectation: DIVIDER * 3) 
         self.INTER_GRID_PADDING = uc.DIVIDER * 3
 
-        # Make window width close to grid width (with a small margin), not a fixed large minimum
-        width_margin = 260
-        width = max(400, self.GRID_WIDTH + width_margin)
-        height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
+        # Make window width close to grid width (with a small margin)
+        self._width_margin = 260
+        self._min_width = max(400, self.GRID_WIDTH + self._width_margin)
+        self._min_height = 2 * self.GRID_HEIGHT + uc.DIVIDER + self.INTER_GRID_PADDING
 
-        self.window = pygame.display.set_mode((width, height))
+        width = self._min_width
+        height = self._min_height
+
+        self.window = pygame.display.set_mode((width, height), pygame.RESIZABLE)
         pygame.display.set_caption("Client")
         self.clock = pygame.time.Clock()
         pygame.font.init()
@@ -61,8 +67,7 @@ class ClientGUI:
         try:
             project_root = Path(__file__).parent.parent
             miss_path = project_root / "source_files" / "sprites" / "pool_float_orange.PNG"
-            miss_img = pygame.image.load(str(miss_path)).convert_alpha()
-            self._miss_sprite = pygame.transform.smoothscale(miss_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
+            self._miss_sprite = pygame.image.load(str(miss_path)).convert_alpha()            # Load raw; Button.draw() will scale to current cell size.
         except Exception:
             self._miss_sprite = None
 
@@ -70,8 +75,7 @@ class ClientGUI:
         try:
             project_root = Path(__file__).parent.parent
             hit_path = project_root / "source_files" / "sprites" / "pool_float_red.PNG"
-            hit_img = pygame.image.load(str(hit_path)).convert_alpha()
-            self._hit_sprite = pygame.transform.smoothscale(hit_img, (uc.BUTTON_WIDTH, uc.BUTTON_HEIGHT))
+            self._hit_sprite = pygame.image.load(str(hit_path)).convert_alpha()             # Load raw; Button.draw() will scale to current cell size.
         except Exception:
             self._hit_sprite = None
 
@@ -98,6 +102,42 @@ class ClientGUI:
         self.top_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
         self.bottom_buttons = uc.create_buttons(uc.MAGNITUDE, uc.MAGNITUDE)
 
+        # Initial layout
+        self._apply_window_size(width, height)
+
+    def _compute_cell_size(self, width: int, height: int) -> int:
+        # Reserve some space for edge icons and breathing room
+        margin_x = max(40, self._icon_size[0] + 15)
+        margin_y = 24
+
+        # Available width for one grid
+        avail_w = max(1, width - 2 * margin_x)
+
+        # Available height for two stacked grids + padding
+        grids_space = max(1, height - 2 * margin_y - self.INTER_GRID_PADDING)
+
+        # Use a square cell size that fits both constraints
+        by_w = (avail_w - (self.MAGNITUDE - 1) * self.DIVIDER) // self.MAGNITUDE
+        by_h = ((grids_space // 2) - (self.MAGNITUDE - 1) * self.DIVIDER) // self.MAGNITUDE
+        return max(10, int(min(by_w, by_h)))
+
+    def _apply_window_size(self, width: int, height: int) -> None:
+        # Recompute cell size + derived grid dimensions for this window size
+        self.cell_size = self._compute_cell_size(width, height)
+        self.GRID_WIDTH = self.MAGNITUDE * self.cell_size + (self.MAGNITUDE - 1) * self.DIVIDER
+        self.GRID_HEIGHT = self.MAGNITUDE * self.cell_size + (self.MAGNITUDE - 1) * self.DIVIDER
+
+        # Update all button rect sizes
+        for grid in (self.top_buttons, self.bottom_buttons):
+            for row in grid:
+                for button in row:
+                    button.rect.width = self.cell_size
+                    button.rect.height = self.cell_size
+
+        self._layout_buttons(width, height)
+
+    # Reposition the two button grids to keep them centered in the current window.
+    def _layout_buttons(self, width: int, height: int) -> None:
         # Center both boards horizontally & vertically as a stacked group
         center_x = (width - self.GRID_WIDTH) // 2
         total_stack_h = 2 * self.GRID_HEIGHT + self.INTER_GRID_PADDING
@@ -105,16 +145,27 @@ class ClientGUI:
         bottom_offset_y = top_offset_y + self.GRID_HEIGHT + self.INTER_GRID_PADDING
 
         # Apply offsets to TOP board
+        step_x = self.cell_size + self.DIVIDER
+        step_y = self.cell_size + self.DIVIDER
         for row in self.top_buttons:
             for button in row:
-                button.rect.x += center_x
-                button.rect.y += top_offset_y
+                r, c = button.index
+                button.rect.x = c * step_x + center_x
+                button.rect.y = r * step_y + top_offset_y
 
-        # Apply offsets to BOTTOM board
+        # Apply offsets to BOTTOM board 
         for row in self.bottom_buttons:
             for button in row:
-                button.rect.x += center_x
-                button.rect.y += bottom_offset_y
+                r, c = button.index
+                button.rect.x = c * step_x + center_x
+                button.rect.y = r * step_y + bottom_offset_y
+
+    # Handle user resizing the window.
+    def handle_resize(self, width: int, height: int) -> None:
+        width = max(int(width), int(self._min_width))
+        height = max(int(height), int(self._min_height))
+        self.window = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+        self._apply_window_size(width, height)
 
     def show_toast(self, text: str, duration_ms: int = 1000, color: tuple[int, int, int] = (60, 220, 90)) -> None:
         self._toast_text = text

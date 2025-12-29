@@ -87,9 +87,12 @@ def process_top_click_events(top_buttons) -> dict:
     import pygame  # local import for safety in non-GUI contexts
     top_click = None
     quit_flag = False
+    resize = None
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             quit_flag = True
+        elif event.type == pygame.VIDEORESIZE:
+            resize = (event.w, event.h) # New window size (w, h)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # Check TOP grid clicks
             for row in top_buttons:
@@ -99,7 +102,7 @@ def process_top_click_events(top_buttons) -> dict:
                         break
                 if top_click is not None:
                     break
-    return {"quit": quit_flag, "top_click": top_click}
+    return {"quit": quit_flag, "top_click": top_click, "resize": resize}
 
 # Places multiple ships on the board.
 # Returns a list of ship dictionaries.
@@ -175,7 +178,7 @@ def normalize_fleet_for_wire(fleet_obj: list) -> str:
 
 
 # Scales down the image and smooth it
-def _load_scaled_image(candidate_paths: list, width: int, height: int):
+def _load_scaled_image(candidate_paths: list, width: int | None, height: int | None):
     import pygame  # local import to avoid GUI dependency on server
     last_err = None
     for path in candidate_paths:
@@ -187,6 +190,8 @@ def _load_scaled_image(candidate_paths: list, width: int, height: int):
             has_alpha = raw.get_masks()[3] != 0
             if has_alpha:
                 img = raw.convert_alpha()
+                if width is None or height is None:
+                    return img
                 return pygame.transform.smoothscale(img, (width, height))
 
             img = raw.convert()
@@ -195,6 +200,9 @@ def _load_scaled_image(candidate_paths: list, width: int, height: int):
                 img.set_colorkey(key, pygame.RLEACCEL)
             except Exception:
                 pass
+
+            if width is None or height is None:
+                return img
 
             scaled = pygame.transform.smoothscale(img, (width, height))
             try:
@@ -328,28 +336,27 @@ def _get_ship_sprites():
     # makes boat sprites at scale smooth
     sprites = {
         "horizontal": {
-            "start": _load_scaled_image(horiz_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "mid": _load_scaled_image(horiz_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "end": _load_scaled_image(horiz_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "start_destroyed": _load_scaled_image(horiz_start_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "mid_destroyed": _load_scaled_image(horiz_mid_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "end_destroyed": _load_scaled_image(horiz_end_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            # Load raw surfaces; Button.draw() will scale to current cell size.
+            "start": _load_scaled_image(horiz_start_paths, None, None),
+            "mid": _load_scaled_image(horiz_mid_paths, None, None),
+            "end": _load_scaled_image(horiz_end_paths, None, None),
+            "start_destroyed": _load_scaled_image(horiz_start_destroyed_paths, None, None),
+            "mid_destroyed": _load_scaled_image(horiz_mid_destroyed_paths, None, None),
+            "end_destroyed": _load_scaled_image(horiz_end_destroyed_paths, None, None),
         },
         "vertical": {
-            "start": _load_scaled_image(vert_start_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "mid": _load_scaled_image(vert_mid_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "end": _load_scaled_image(vert_end_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "start_destroyed": _load_scaled_image(vert_start_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "mid_destroyed": _load_scaled_image(vert_mid_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
-            "end_destroyed": _load_scaled_image(vert_end_destroyed_paths, BUTTON_WIDTH, BUTTON_HEIGHT),
+            # Load raw surfaces; Button.draw() will scale to current cell size.
+            "start": _load_scaled_image(vert_start_paths, None, None),
+            "mid": _load_scaled_image(vert_mid_paths, None, None),
+            "end": _load_scaled_image(vert_end_paths, None, None),
+            "start_destroyed": _load_scaled_image(vert_start_destroyed_paths, None, None),
+            "mid_destroyed": _load_scaled_image(vert_mid_destroyed_paths, None, None),
+            "end_destroyed": _load_scaled_image(vert_end_destroyed_paths, None, None),
         },
     }
     return sprites
 
     # Assign boat sprites to the corresponding Button.image based on the fleet payload.
-    # - surface: pygame Surface (unused here; kept for backward compatibility)
-    # - fleet_payload: JSON string (or dict) in the format produced by normalize_fleet_for_wire
-    # - button_grid: 2D list of Button objects (for positions/sizes); this function sets Button.image
 def procces_boats_sprites(surface, fleet_payload, button_grid) -> None:
     if not fleet_payload:
         return

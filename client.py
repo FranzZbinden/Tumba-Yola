@@ -99,6 +99,9 @@ def main():
         events = gui.process_events()
         if events["quit"]:
             run = False
+        if events.get("resize"):
+            w, h = events["resize"]
+            gui.handle_resize(w, h)
 
         if events.get("top_click") is not None and turn == client_id:
             pos_str = uc.make_pos(events["top_click"])
