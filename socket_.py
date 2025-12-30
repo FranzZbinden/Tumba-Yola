@@ -19,6 +19,7 @@ class Socket_:
         self._q_update = deque()
         self._q_error = deque()
         self._q_ack = deque()
+        self._q_status = deque()
 
         self.player_id = None
         self.connect()
@@ -161,6 +162,9 @@ class Socket_:
         if t == "error":
             self._q_error.append(payload)
             return
+        if t == "status":
+            self._q_status.append(payload)
+            return
         # else: ignore unknown types for now
 
 
@@ -207,6 +211,10 @@ class Socket_:
     def get_turn(self) -> int | None:
         self._pump(blocking=False)
         return self._pop_left(self._q_turn)
+
+    def get_status(self) -> str | None:
+        self._pump(blocking=False)
+        return self._pop_left(self._q_status)
 
     def close(self) -> None:
         try:

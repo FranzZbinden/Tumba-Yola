@@ -149,7 +149,7 @@ class ClientGUI:
                 button.rect.x = c * step_x + center_x
                 button.rect.y = r * step_y + top_offset_y
 
-        # Apply offsets to BOTTOM board 
+        # Apply offsets to BOTTOM board
         for row in self.bottom_buttons:
             for button in row:
                 r, c = button.index
@@ -263,6 +263,35 @@ class ClientGUI:
         return events
 
     # draw both boards according to their 2d lists and update the window.
+    def draw_waiting_overlay(self) -> None:
+        width, height = self.window.get_size()
+        
+        # Dark overlay
+        dim = pygame.Surface((width, height), pygame.SRCALPHA)
+        dim.fill((0, 0, 0, 140))
+        self.window.blit(dim, (0, 0))
+        
+        # Animated loading message (pulsing alpha)
+        t = pygame.time.get_ticks() / 1000.0
+        pulse = abs(math.sin(t * 2))  # 0..1..0 cycle
+        alpha = int(100 + pulse * 155)  # 100..255
+        
+        title_font = uc.load_jersey10_font(60)
+        msg = "Waiting for opponent..."
+        text = title_font.render(msg, True, (255, 255, 255))
+        
+        # Create surface with variable alpha
+        text_with_alpha = pygame.Surface(text.get_size(), pygame.SRCALPHA)
+        text_with_alpha.fill((0, 0, 0, 0))
+        text_with_alpha.blit(text, (0, 0))
+        text_with_alpha.set_alpha(alpha)
+        
+        tx = (width - text.get_width()) // 2
+        ty = (height - text.get_height()) // 2
+        self.window.blit(text_with_alpha, (tx, ty))
+        
+        pygame.display.flip()
+
     def draw(self, top_matrix: list, bottom_matrix: list, interactive: bool = True, flip: bool = True) -> None:
         self.clock.tick(15)
         hover = self._hovered_button(pygame.mouse.get_pos()) if interactive else None

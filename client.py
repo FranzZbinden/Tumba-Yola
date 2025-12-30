@@ -56,7 +56,11 @@ def main():
 
         # Pump initial messages from server 
         # This ensures the first draw shows clean boards.
+        initial_status = None
         for _ in range(5):
+            maybe_status = n.get_status()
+            if maybe_status:
+                initial_status = maybe_status
             if n.get_fleet() is None and n.get_matrix() is None:
                 break
             maybe_fleet = n.get_fleet()
@@ -70,8 +74,18 @@ def main():
             if new_turn is not None:
                 turn = new_turn
 
+        waiting_for_opponent = (initial_status == "WAITING")
+
         run = True
-        while run:
+        while run: # Check for status updates (WAITING -> OK when opponent joins)
+            status_update = n.get_status()
+            if status_update:
+                if status_update == "OK" and waiting_for_opponent:
+                    waiting_for_opponent = False
+                    gui.show_toast("MATCH STARTING", duration_ms=1500, color=(60, 220, 90))
+                elif status_update == "WAITING":
+                    waiting_for_opponent = True
+
             # Non-blocking updates from server
             new_turn = n.get_turn()
             if new_turn is not None:
@@ -155,7 +169,12 @@ def main():
                 elif reply and reply.startswith("error|"):
                     print(reply)
 
-            gui.draw(top_matrix, bottom_matrix)
+            if waiting_for_opponent: # Draw game state or waiting overlay
+                # Render boards underneath (no interaction), then overlay
+                gui.draw(top_matrix, bottom_matrix, interactive=False, flip=False)
+                gui.draw_waiting_overlay()
+            else:
+                gui.draw(top_matrix, bottom_matrix)
             prep_game_status = False
 
         # End of one match loop 
