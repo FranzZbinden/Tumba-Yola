@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 # Boards data
 BUTTON_WIDTH, BUTTON_HEIGHT = 30, 30
-DIVIDER = 1 # space between
+DIVIDER = -1 # space between, almost none
 MAGNITUDE = 10 # length -> (x,y)
 MUSIC ="source_files/audio/pirate_7.mp3"
 SHIP_LENGTHS = (3, 4, 5, 6)
