@@ -39,7 +39,7 @@ class ClientGUI:
         self._hit_sprite = None
         self._enemy_icon = None
         self._you_icon = None
-        self._icon_size = (125, 125)  
+        self._icon_size = (150, 150)  
         self._icon_amp = 6            # pixels (small movement)
         self._icon_speed = 0.45       
         try:
@@ -247,7 +247,7 @@ class ClientGUI:
                     running = False
 
             pygame.display.flip()
-            clock.tick(30)
+            clock.tick(15)
 
         return action
 
@@ -311,7 +311,7 @@ class ClientGUI:
         w = 2 * math.pi * self._icon_speed
         dx = int(self._icon_amp * math.sin(w * t))
         dy = int((self._icon_amp / 2) * math.sin(2 * w * t))
-        edge_pad = 0
+        edge_pad = 20
         if self._enemy_icon is not None:
             self.window.blit(self._enemy_icon, (edge_pad + dx, edge_pad + dy))
         if self._you_icon is not None:

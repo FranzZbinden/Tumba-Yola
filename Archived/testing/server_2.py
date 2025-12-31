@@ -4,7 +4,7 @@ HOST = "127.0.0.1"
 
 PORT = 55555
 
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:    # no need for closing socket because of with 
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST,PORT))
     s.listen()
     conn,addr = s.accept() # blocking

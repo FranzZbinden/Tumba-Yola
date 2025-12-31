@@ -3,6 +3,8 @@ import random as rdm
 import json
 import os
 from typing import TYPE_CHECKING
+import pygame  
+from pathlib import Path
 
 if TYPE_CHECKING:
     from socket_ import Socket_
@@ -25,9 +27,6 @@ GREY = (200, 200, 200)
 
 
 def load_jersey10_font(size: int, fallback_name: str = "sans-serif"):
-    import pygame  
-    from pathlib import Path
-
     project_root = Path(__file__).parent.parent
     font_path = project_root / "source_files" / "fonts" / "Jersey10-Regular.ttf"
     try:

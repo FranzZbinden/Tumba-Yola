@@ -1,10 +1,111 @@
- Protocol (newline-delimited), compatible with `socket_.py`:
- - ack|You are player: <0|1>
- - room|<room_id>
- - status|WAITING|OK
- - fleet|<json>
- - matrix|<collapsed_matrix>
- - turn|<0|1>
- - update|hit/miss|r,c      (sent to attacker after a valid attack)
- - win|You won              (sent only to the winner; loser can detect loss by board hits)
- - error|<message>
+TumbaYola Network Protocol
+=============================================================================
+All messages are newline-delimited UTF-8 text.
+Format: <type>|<payload>\n
+
+Server -> Client Messages:
+-----------------------------------------------------------------------------
+
+1. ack|You are player: <0|1>
+   - Sent immediately on connection
+   - Client uses this to determine player_id
+   - Example: "ack|You are player: 0\n"
+
+2. room|<room_id>
+   - Sent after ack, indicates which room the client joined
+   - Example: "room|1\n"
+
+3. status|<WAITING|OK>
+   - Sent after room assignment
+   - WAITING: Client is first in room, waiting for opponent
+   - OK: Room is full, match can start
+   - Example: "status|WAITING\n" or "status|OK\n"
+
+4. fleet|<json>
+   - Sent when match starts (or immediately if WAITING)
+   - JSON payload contains ship placement for this player's board
+   - Format: {"ships": [{"cells": [[r,c], ...], "start": [r,c], "end": [r,c], "dir": "horizontal|vertical"}, ...]}
+   - Example: "fleet|{\"ships\":[{\"cells\":[[0,0],[0,1],[0,2]],\"start\":[0,0],\"end\":[0,2],\"dir\":\"horizontal\"}]}\n"
+
+5. matrix|<collapsed_matrix>
+   - Sent when match starts or after opponent attacks
+   - Collapsed matrix format: rows separated by ';', cells by ','
+   - Cell values: 0=empty, 1=ship, 2=miss, 3=hit
+   - Example: "matrix|0,0,1,1,1;0,0,0,0,0;...\n"
+
+6. turn|<0|1>
+   - Sent when match starts and after each valid attack
+   - Indicates which player can attack now
+   - Example: "turn|0\n"
+
+7. update|<hit|miss>|<r>,<c>
+   - Sent to attacker after a valid attack
+   - Reports outcome and coordinates
+   - Example: "update|hit|3,5\n" or "update|miss|2,4\n"
+
+8. win|You won
+   - Sent to the winner when they destroy all opponent ships
+   - Loser detects loss by counting hits on their own board (18 total ship cells)
+   - Example: "win|You won\n"
+
+9. error|<message>
+   - Sent when client sends invalid command or attacks out of turn
+   - Common errors:
+     - "error|Invalid message format\n"
+     - "error|Invalid Coordinates\n"
+     - "error|Not your turn\n"
+     - "error|Cell at (r,c) already attacked.\n"
+     - "error|Opponent disconnected\n"
+   - Example: "error|Not your turn\n"
+
+
+Client → Server Messages:
+-----------------------------------------------------------------------------
+
+1. attack|<r>,<c>
+   - Client sends this to attack a cell on opponent's board
+   - r,c are zero-indexed coordinates
+   - Server validates turn, coordinates, and cell state
+   - Example: "attack|3,5\n"
+   - Server responds with: update|... + matrix|... + turn|...
+
+
+Connection Flow:
+-----------------------------------------------------------------------------
+
+Initial Connection:
+  Server → ack|You are player: 0
+  Server → room|1
+  Server → status|WAITING
+  Server → fleet|{...}         (if WAITING, sent early so UI can display board)
+  Server → matrix|...           (if WAITING, sent early so UI can display board)
+  (Client waits for opponent, shows "Waiting for opponent..." overlay)
+
+When Opponent Joins:
+  Server → status|OK            (sent to both players)
+  Server → fleet|{...}          (sent to player 1, who didn't get it yet)
+  Server → matrix|...           (sent to both, final state)
+  Server → turn|0               (sent to both, match begins)
+
+During Match:
+  Client → attack|r,c
+  Server → update|hit|r,c       (to attacker)
+  Server → matrix|...           (to defender, shows new hit/miss)
+  Server → turn|<next_player>   (to both)
+
+Match End:
+  Server → win|You won          (to winner only)
+  (Loser detects loss: counts hits >= 18 on own board)
+
+Disconnect:
+  Server → error|Opponent disconnected  (to remaining player)
+  (Client shows end screen, can search for new match)
+
+
+Notes:
+-----------------------------------------------------------------------------
+- All string comparisons are case-sensitive
+- Empty lines are ignored
+- Unknown message types are silently dropped by client
+- Server uses threading: one thread per client connection
+- Room resets game state when a player leaves and room becomes WAITING again
