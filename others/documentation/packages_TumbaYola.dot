@@ -1,0 +1,35 @@
+digraph "packages_TumbaYola" {
+rankdir=BT
+charset="utf-8"
+"Utilities" [color="black", label=<Utilities>, shape="box", style="solid"];
+"Utilities.Utilities_Archived" [color="black", label=<Utilities.Utilities_Archived>, shape="box", style="solid"];
+"Utilities.button" [color="black", label=<Utilities.button>, shape="box", style="solid"];
+"Utilities.client_gui" [color="black", label=<Utilities.client_gui>, shape="box", style="solid"];
+"Utilities.end_screen" [color="black", label=<Utilities.end_screen>, shape="box", style="solid"];
+"Utilities.game_state" [color="black", label=<Utilities.game_state>, shape="box", style="solid"];
+"Utilities.room" [color="black", label=<Utilities.room>, shape="box", style="solid"];
+"Utilities.room_manager" [color="black", label=<Utilities.room_manager>, shape="box", style="solid"];
+"Utilities.server_utilities" [color="black", label=<Utilities.server_utilities>, shape="box", style="solid"];
+"Utilities.starter_GUI" [color="black", label=<Utilities.starter_GUI>, shape="box", style="solid"];
+"Utilities.utilities" [color="black", label=<Utilities.utilities>, shape="box", style="solid"];
+"client" [color="black", label=<client>, shape="box", style="solid"];
+"server" [color="black", label=<server>, shape="box", style="solid"];
+"socket_" [color="black", label=<socket_>, shape="box", style="solid"];
+"Utilities.end_screen" -> "Utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.end_screen" -> "Utilities.utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.game_state" -> "Utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.game_state" -> "Utilities.server_utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.game_state" -> "Utilities.utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.room" -> "Utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.room" -> "Utilities.server_utilities" [arrowhead="open", arrowtail="none"];
+"Utilities.room_manager" -> "Utilities.room" [arrowhead="open", arrowtail="none"];
+"client" -> "Utilities" [arrowhead="open", arrowtail="none"];
+"client" -> "Utilities.client_gui" [arrowhead="open", arrowtail="none"];
+"client" -> "Utilities.end_screen" [arrowhead="open", arrowtail="none"];
+"client" -> "Utilities.utilities" [arrowhead="open", arrowtail="none"];
+"client" -> "socket_" [arrowhead="open", arrowtail="none"];
+"server" -> "Utilities" [arrowhead="open", arrowtail="none"];
+"server" -> "Utilities.game_state" [arrowhead="open", arrowtail="none"];
+"server" -> "Utilities.room_manager" [arrowhead="open", arrowtail="none"];
+"server" -> "Utilities.server_utilities" [arrowhead="open", arrowtail="none"];
+}

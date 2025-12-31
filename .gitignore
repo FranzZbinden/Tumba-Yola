@@ -14,3 +14,5 @@ test_button.py
 credits
 .idea
 diagrams
+dist
+build
