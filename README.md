@@ -65,6 +65,7 @@ https://github.com/user-attachments/assets/4e26e561-39f5-4f58-9006-cab9d79cc75f
 - **`client.py`**: Pygame client (UI rendering, input handling, audio, non-blocking network polling).
 - **`server.py`**: TCP server handling connections, matchmaking, and game updates.
 - **`Utilities/`**: Shared gameplay and server-side utilities (game state, room management, sprite processing, etc.).
+<img width="750" height="1715" alt="class_diagram" src="https://github.com/user-attachments/assets/e472cb6f-5271-4a88-b1de-797378ac6862" />
 
 ### Room management
 The server supports **multiple simultaneous matches** by grouping players into independent rooms:
